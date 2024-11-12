@@ -59,6 +59,12 @@ def heaviside(x):
 note - for step function the error is 1 / -1 or 0 for bingo! no error.
 
 
+Versions include:
+- Vanilla Python
+- With [NumPy](https://numpy.org)
+- With [PyTorch](https://pytorch.org) (and [Autograd](https://pytorch.org/docs/stable/notes/autograd.html))
+
+
 
 ### Vanilla
 
@@ -89,7 +95,7 @@ class Perceptron:
 
 
 
-### With [NumPy](https://numpy.org)
+### With NumPy
 
 
 ```python
@@ -155,7 +161,7 @@ Input: [1, 1], Prediction: 1
 
 
 
-### With [PyTorch](https://pytorch.org) (and [Autograd](https://pytorch.org/docs/stable/notes/autograd.html))
+### With PyTorch (and Autograd)
 
 
 
@@ -166,13 +172,13 @@ class Perceptron(nn.Module):
     def __init__(self):
         super(Perceptron, self).__init__()
         # Input layer with 2 inputs, output layer with 1 output
-        self.layer         = nn.Linear(2, 1)
-        self.step_function = nn.Sigmoid()
+        self.layer  = nn.Linear(2, 1)
+        self.act_fn = nn.Sigmoid()
 
     def forward(self, x):
         # Forward pass through the perceptron
         x = self.layer(x)
-        x = self.step_function(x)
+        x = self.act_fn(x)
         return x
 ```
 
@@ -247,22 +253,28 @@ Logical XOR Problem:
 
 Let's reverse the samples - PyTorch, NumPy, and Vanilla
 
-PyTorch
+
+### PyTorch
 
 ```python
 import torch.nn as nn
 
+# Input layer has 2 neurons (for 2 inputs),
+# hidden layer has 2 neurons,
+# output has 1 neuron
+
 class MLP(nn.Module):
     def __init__(self):
         super(MLP, self).__init__()
-        # Input layer has 2 neurons (for 2 inputs), hidden layer has 2 neurons, output has 1 neuron
-        self.input_layer   = nn.Linear(2, 2)  # First layer: 2 inputs -> 2 hidden neurons
-        self.hidden_layer  = nn.Linear(2, 1)  # Second layer: 2 hidden neurons -> 1 output
-        self.act_fn = nn.Sigmoid()            # Sigmoid activation function
+        # First layer: 2 inputs -> 2 hidden neurons
+        self.input_hidden   = nn.Linear(2, 2)
+        # Second layer: 2 hidden neurons -> 1 output
+        self.hidden_output  = nn.Linear(2, 1)
+        self.act_fn = nn.Sigmoid()      # Sigmoid activation function
 
     def forward(self, x):
-        x = self.act_fn(self.input_layer(x))
-        x = self.act_fn(self.hidden_layer(x))
+        x = self.act_fn(self.input_hidden(x))
+        x = self.act_fn(self.hidden_output(x))
         return x
 ```
 
@@ -276,3 +288,72 @@ Input: [0. 1.] -> Prediction: 0.9913523197174072 (Target: 1.0)
 Input: [1. 0.] -> Prediction: 0.9916595816612244 (Target: 1.0)
 Input: [1. 1.] -> Prediction: 0.009626330807805061 (Target: 0.0)
 ```
+
+
+### NumPy
+
+
+```python
+import numpy as np
+
+# define the sigmoid activation function and its derivative
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_derivative(x):
+    return x * (1 - x)
+
+
+class MLP:
+    def __init__(self):
+        # weights between input and hidden layer
+        self.weights_input_hidden = np.random.randn(2, 2)
+        # weights between hidden and output layer
+        self.weights_hidden_output = np.random.randn(2, 1)
+        # initialize biases for hidden and output layers
+        self.bias_hidden = np.random.randn(1, 2)
+        self.bias_output = np.random.randn(1, 1)
+
+    def forward(self, X):
+        # Input to hidden layer
+        self.hidden_input = np.dot(X, self.weights_input_hidden) + self.bias_hidden
+        self.hidden_output = sigmoid(self.hidden_input)
+        # Hidden to output layer
+        self.output_input = np.dot(self.hidden_output, self.weights_hidden_output) + self.bias_output
+        self.output = sigmoid(self.output_input)
+        return self.output
+
+    def backward(self, X, y):
+        # Calculate output layer error
+        output_error = y - self.output
+        output_delta = output_error * sigmoid_derivative(self.output)
+
+        # Calculate hidden layer error
+        hidden_error = output_delta.dot(self.weights_hidden_output.T)
+        hidden_delta = hidden_error * sigmoid_derivative(self.hidden_output)
+
+        # Update weights and biases
+        self.weights_hidden_output += self.hidden_output.T.dot(output_delta) * self.learning_rate
+        self.bias_output += np.sum(output_delta, axis=0, keepdims=True) * self.learning_rate
+
+        self.weights_input_hidden += X.T.dot(hidden_delta) * self.learning_rate
+        self.bias_hidden += np.sum(hidden_delta, axis=0, keepdims=True) * self.learning_rate
+
+    def train(self, X, y, epochs=10000, learning_rate=0.1):
+        self.learning_rate = learning_rate
+        for epoch in range(epochs):
+            self.forward(X)  # Forward pass
+            self.backward(X, y)  # Backward pass (update weights and biases)
+```
+
+
+
+### Vanilla
+
+Left as an exercise for you ;-).
+
+Or try to (auto)generate via a.i.
+See [Q: generate a multi-layer perceptron in plain vanilla python code and train on logical xor](https://github.com/planetopenllms/llms.sandbox/tree/main/perceptron/perceptron-v2b).
+
+
+
