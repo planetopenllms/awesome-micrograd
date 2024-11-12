@@ -307,19 +307,19 @@ def sigmoid_derivative(x):
 class MLP:
     def __init__(self):
         # weights between input and hidden layer
-        self.weights_input_hidden = np.random.randn(2, 2)
+        self.weights_ih = np.random.randn(2, 2)
         # weights between hidden and output layer
-        self.weights_hidden_output = np.random.randn(2, 1)
+        self.weights_ho = np.random.randn(2, 1)
         # initialize biases for hidden and output layers
-        self.bias_hidden = np.random.randn(1, 2)
-        self.bias_output = np.random.randn(1, 1)
+        self.bias_h     = np.random.randn(1, 2)
+        self.bias_o     = np.random.randn(1, 1)
 
     def forward(self, X):
         # Input to hidden layer
-        self.hidden_input = np.dot(X, self.weights_input_hidden) + self.bias_hidden
+        self.hidden_input = np.dot(X, self.weights_ih) + self.bias_h
         self.hidden_output = sigmoid(self.hidden_input)
         # Hidden to output layer
-        self.output_input = np.dot(self.hidden_output, self.weights_hidden_output) + self.bias_output
+        self.output_input = np.dot(self.hidden_output, self.weights_ho) + self.bias_o
         self.output = sigmoid(self.output_input)
         return self.output
 
@@ -329,15 +329,15 @@ class MLP:
         output_delta = output_error * sigmoid_derivative(self.output)
 
         # Calculate hidden layer error
-        hidden_error = output_delta.dot(self.weights_hidden_output.T)
+        hidden_error = output_delta.dot(self.weights_ho.T)
         hidden_delta = hidden_error * sigmoid_derivative(self.hidden_output)
 
         # Update weights and biases
-        self.weights_hidden_output += self.hidden_output.T.dot(output_delta) * self.learning_rate
-        self.bias_output += np.sum(output_delta, axis=0, keepdims=True) * self.learning_rate
+        self.weights_ho += self.hidden_output.T.dot(output_delta) * self.learning_rate
+        self.bias_o += np.sum(output_delta, axis=0, keepdims=True) * self.learning_rate
 
-        self.weights_input_hidden += X.T.dot(hidden_delta) * self.learning_rate
-        self.bias_hidden += np.sum(hidden_delta, axis=0, keepdims=True) * self.learning_rate
+        self.weights_ih += X.T.dot(hidden_delta) * self.learning_rate
+        self.bias_h += np.sum(hidden_delta, axis=0, keepdims=True) * self.learning_rate
 
     def train(self, X, y, epochs=10000, learning_rate=0.1):
         self.learning_rate = learning_rate
