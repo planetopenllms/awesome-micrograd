@@ -49,10 +49,10 @@ Y_and  = [0, 0, 0, 1]  # Output labels for AND operation (linear)
 
 
 
-Step functions - Heaviside
+Step functions - Binary
 
 ```python
-def heaviside(x):
+def binary_step(x):
     return 1 if x > 0 else 0
 ```
 
@@ -74,7 +74,7 @@ class Perceptron:
     def __init__(self):
         self.w = [0,0]
         self.b =  0
-        self.step_function = heaviside
+        self.step_function = binary_step
 
     def predict(self, x):
         total = self.w[0] * x[0] +\
@@ -105,7 +105,7 @@ class Perceptron:
     def __init__(self):
         self.w = np.zeros(2)
         self.b = 0
-        self.step_function = heaviside
+        self.step_function = binary_step
 
     def predict(self, x):
         total = np.dot(x, self.w) + self.b
