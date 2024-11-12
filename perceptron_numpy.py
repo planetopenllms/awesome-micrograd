@@ -1,6 +1,7 @@
 import numpy as np
 
-def step_function(x):
+
+def heaviside(x):
     return 1 if x > 0 else 0
 
 
@@ -8,10 +9,11 @@ class Perceptron:
     def __init__(self):
         self.w = np.zeros(2)
         self.b = 0
+        self.step_function = heaviside
 
     def predict(self, x):
         total = np.dot(x, self.w) + self.b
-        return step_function(total)
+        return self.step_function(total)
 
     def train(self, X, Y, epochs=10, learning_rate=0.1):
         X = np.array( X )

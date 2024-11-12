@@ -1,14 +1,19 @@
+# Initialize weights and bias
+#   with random numbers -1 to 1  e.g. 2*random.random()-1
+#   or try/use random.random() for 0 to 1
 
-# Step activation function: Outputs 1 if x = 0 else 0
+import random
+
+
+# Step activation function: Outputs 1 if x > 0 else 0
 def heaviside(x):
     return 1 if x > 0 else 0
 
-
 class Perceptron:
-    # Initialize weights and bias
     def __init__(self):
-        self.w = [0,0]  # Random weights for each input
-        self.b    =  0
+        self.w = [2*random.random()-1,
+                  2*random.random()-1]
+        self.b =  2*random.random()-1
         self.step_function = heaviside
 
     def predict(self, x):
@@ -17,7 +22,7 @@ class Perceptron:
         return self.step_function(total)
 
     # Train the perceptron using the perceptron learning rule
-    def train(self, X, Y, epochs=10, learning_rate=0.1):
+    def train(self, X, Y, epochs=100, learning_rate=0.1):
         for epoch in range(epochs):
             for x, y in zip(X, Y):
                 y_hat = self.predict(x)
