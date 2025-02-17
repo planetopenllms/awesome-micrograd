@@ -16,7 +16,7 @@
 > how to best use the gradients for a parameter update (e.g. SGD -> AdamW) etc etc. 
 > But it is the core of what is mostly happening.
 >
-> The [1986 paper from Rumelhart, Hinton, Williams](https://cs.toronto.edu/~hinton/absps/naturebp.pdf) that popularized and used this algorithm (backpropagation) for training neural nets,
+> The [1986 paper from Rumelhart, Hinton, Williams](https://www.cs.toronto.edu/~hinton/absps/naturebp.pdf) that popularized and used this algorithm (backpropagation) for training neural nets,
 > [micrograd on Github](https://github.com/karpathy/micrograd) 
 > and [my (now somewhat old) YouTube video](https://www.youtube.com/watch?v=VMj-3S1tku0) where I very slowly build and explain.
 >
