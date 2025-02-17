@@ -267,7 +267,7 @@ puts "b: #{b}" # prints 645.5773, i.e. the numerical value of dg/db
 ### Ruby
 
 **micrograd** by Nithin Bekal,
-see <https://github.com/nithinbekal/micrograd>
+see <https://github.com/nithinbekal/micrograd>, [(rdocs)](https://www.rubydoc.info/gems/micrograd)
 
 <details>
 <summary>Show/Hide Sample</summary>
@@ -289,6 +289,11 @@ l.start_backward
 ```
 
 </details>
+
+
+**backprop** by Rick Hull,
+see <https://github.com/rickhull/backprop>, [(rdocs)](https://www.rubydoc.info/gems/backprop)
+
 
 
 
