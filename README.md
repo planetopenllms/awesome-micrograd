@@ -23,7 +23,7 @@
 >  -- Andrej Karpathy,  June 2024
 
 
-# Awesome Micro Grad (micrograd)
+# Awesome Micrograd & Friends
 
 
 
