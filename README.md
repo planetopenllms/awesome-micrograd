@@ -203,7 +203,7 @@ see <https://github.com/nathan-barry/go-micrograd>
 <summary>Show/Hide Sample</summary>
 
 ``` go
-x := New(2)
+    x := New(2)
 	w := New(0.4) // pretend random init
 	y := New(4)
 
@@ -262,6 +262,34 @@ puts "b: #{b}" # prints 645.5773, i.e. the numerical value of dg/db
 ```
 
 </details>
+
+
+### Ruby
+
+**micrograd** by Nithin Bekal,
+see <https://github.com/nithinbekal/micrograd>
+
+<details>
+<summary>Show/Hide Sample</summary>
+
+``` ruby
+include Micrograd
+
+a = Value.new(2.0)
+b = Value.new(-3.0)
+c = Value.new(10.0)
+e = a * b
+d = e + c
+f = Value.new(-2.0)
+
+l = d * f
+
+# Walk through all the values and calculate gradients for them.
+l.start_backward
+```
+
+</details>
+
 
 
 ### Julia
