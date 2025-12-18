@@ -1,0 +1,10 @@
+#######
+## ignore dotenv (.env)
+.env
+
+
+###
+# ignore python files
+__pycache__
+.pytest_cache
+
