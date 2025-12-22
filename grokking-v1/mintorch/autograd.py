@@ -23,8 +23,14 @@ class Tensor (object):
                     build_topo(child)
                 topo.append(v)
         build_topo(self)
-      
-        self.grad =  grad ## 1
+   
+        if type(grad) == type(None):
+            grad = np.ones_like( self.data )
+
+        ## note - grad is NOT wrapped / a tensor!
+        ##           MUST be raw numpy ndarray!!
+        assert isinstance( grad, (np.ndarray,np.generic)), f"grad type is {type(grad)}"
+        self.grad =  grad    ## 1
 
         # go one variable at a time and apply the chain rule to get its gradient
         for v in reversed(topo):
@@ -32,11 +38,15 @@ class Tensor (object):
 
     
     def _input_grad( self, grad ):
+        ## note - grad is NOT wrapped / a tensor!
+        ##           MUST be raw numpy ndarray (or numpy scalar)!!
+        assert isinstance( grad, (np.ndarray,np.generic)), f"grad type is {type(grad)}"
+ 
         ## todo:
         ##   assert shape - self.data same as grad!!
         ##    input and input_grad MUST always be same shape
         ##    assert_shape here
-        if(self.grad == None):
+        if type(self.grad) == type(None):
            self.grad = grad
         else:    ## accumulate gradients
            self.grad += grad          
@@ -44,8 +54,6 @@ class Tensor (object):
 
     def _backward(self):
         print( f"--backward _op={self._op}, output_gradient={self.grad}")
-        # grads must not have grads of their own
-        ## assert self.grad.requires_grad == False
         
         ## todo
         ##  assert shape - self.data same as self.grad!!
@@ -61,27 +69,20 @@ class Tensor (object):
             self._creators[0]._input_grad( output_grad )
             self._creators[1]._input_grad( -output_grad )
         if(self._op == "mul"):
-            ## note - hack - use Tensor() wrapper to get tensor copy WITHOUT require_grad=False 
-            #                   might be possibly True in original!!!
-            self._creators[0]._input_grad( output_grad * Tensor(self._creators[1].data) ) 
-            self._creators[1]._input_grad( output_grad * Tensor(self._creators[0].data) )
+            self._creators[0]._input_grad( output_grad * self._creators[1].data ) 
+            self._creators[1]._input_grad( output_grad * self._creators[0].data )
         if(self._op == "mm"):
             c0 = self._creators[0]
             c1 = self._creators[1]
-            new = output_grad.mm(c1.transpose())
-            c0._input_grad( new )
-            new = output_grad.transpose().mm(c0).transpose()
-            c1._input_grad( new )
+            c0._input_grad( output_grad.dot(c1.data.T) )
+            c1._input_grad( output_grad.T.dot(c0.data).T )
         if(self._op == "transpose"):
-            self.creators[0]._input_grad( output_grad.transpose() )
+            self.creators[0]._input_grad( output_grad.T )
         if(self._op == "neg"):
-            self._creators[0]._input_grad( -output_grad ) ## or output_grad.__neg__()
+            self._creators[0]._input_grad( -output_grad )
 
 
     def __add__(self, other):
-        ###  todo - double check - return to AND - why? why not?
-        ##               see __mul__ for trouble in sample!!
-        ## note - book uses and (NOT or) - why?
         if(self.requires_grad or other.requires_grad):
            return Tensor(self.data + other.data,
                        requires_grad=True,   
@@ -90,10 +91,10 @@ class Tensor (object):
 
     def __neg__(self):
         if(self.requires_grad):
-            return Tensor(self.data * -1,
+            return Tensor(-self.data,   ## or use *-1
                           requires_grad=True,
                           _creators=[self], _op="neg")
-        return Tensor(self.data * -1)
+        return Tensor(-self.data)
 
     def __sub__(self, other):
         if(self.requires_grad or other.requires_grad):
@@ -111,15 +112,14 @@ class Tensor (object):
 
     def transpose(self):
         if(self.requires_grad):
-            return Tensor(self.data.transpose(),
+            return Tensor(self.data.T,
                           requires_grad=True,
                           _creators=[self], _op="transpose")
-        return Tensor(self.data.transpose())
+        return Tensor(self.data.T)
     
     def mm(self, x):
-        ## double check requires_grad check again here!!!
         if(self.requires_grad or x.requires_grad):
-            return Tensor(self.data.dot(x.data),   ## change .dot to mm() too if possible???
+            return Tensor(self.data.dot(x.data),  ## try matmul or @ such!!   
                           requires_grad=True,
                           _creators=[self,x], _op="mm")
         return Tensor(self.data.dot(x.data))

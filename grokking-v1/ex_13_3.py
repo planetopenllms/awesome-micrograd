@@ -5,7 +5,7 @@ x = Tensor([1,2,3,4,5], requires_grad=True)
 y = Tensor([2,2,2,2,2], requires_grad=True)
 
 z = x + y
-z.backward(Tensor([1,1,1,1,1]))
+z.backward()
 
 print(x.grad)
 print(y.grad)
@@ -23,7 +23,7 @@ e = a + b
 f = c + d
 g = e + f
 
-g.backward(Tensor([1,1,1,1,1]))
+g.backward()
 
 print(a.grad)
 

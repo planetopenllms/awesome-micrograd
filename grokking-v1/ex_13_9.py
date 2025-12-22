@@ -6,7 +6,7 @@ w = Tensor( [2,2,2], requires_grad=True)
 b = Tensor( [3,3,3], requires_grad=True)
 
 y = x*x + x*w - b 
-y.backward( Tensor([1,1,1]))
+y.backward()
 
 print( x.grad ) 
 print( w.grad ) 
@@ -20,7 +20,7 @@ w = Tensor( 2, requires_grad=True)
 b = Tensor( 3, requires_grad=True)
 
 y = x*x + x*w - b 
-y.backward( Tensor( 1 ))
+y.backward()
 
 print( x.grad ) 
 print( w.grad ) 
@@ -35,7 +35,7 @@ x = Tensor( [[1,2]], requires_grad=True )   # (1x2)
 W = Tensor( [[.1,.2,.3],[.4,.5,.6]], requires_grad=True)   # (2x3)
 
 y = x.mm(W)
-y.backward( Tensor([[1,1,1]]) )   # (1,3)
+y.backward()    # (1x3)
 
 print( y ) 
 print( x.grad ) 

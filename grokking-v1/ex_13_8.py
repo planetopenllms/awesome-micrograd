@@ -8,7 +8,7 @@ d = a + (-b)
 e = (-b) + c
 f = d + e
 
-f.backward(Tensor([1,1,1,1,1]))
+f.backward()
 
 print(b.grad )   ## expeced [-2,-2,-2,-2,-2]
 
