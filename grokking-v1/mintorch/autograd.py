@@ -1,6 +1,27 @@
 import numpy as np
 
-class Tensor (object):    
+
+## helper to expand np array
+##      check if there's something builtin
+#       from the book Grokking Deep Learning
+def _np_expand(data, dim, copies):
+    trans_cmd = list(range(0,len(data.shape)))
+    trans_cmd.insert(dim,len(data.shape))
+    new_data = data.repeat(copies).reshape(list(data.shape) + [copies]).transpose(trans_cmd)
+    return new_data
+
+##
+## todo - replace with simpler version - why? why not?
+##          check/assert if both are the same
+def _np_expand_copies(data, dim, copies):
+    # bonus - allow negative dims: convert to insertion index in [0, data.ndim]
+    # if dim < 0:
+    #    dim += data.ndim + 1
+    return np.repeat(np.expand_dims(data, axis=dim), copies, axis=dim)
+
+
+class Tensor (object):   
+
     def __init__(self, data, requires_grad=False, _creators=(), _op=None):
         self.data = np.array(data, dtype=np.float32)   ### always - autoconvert to dtype float32!!!
         self.grad = None
@@ -10,6 +31,13 @@ class Tensor (object):
         ## self._prev = set(_creators) 
         self._creators = _creators
         self._op = _op  # the op that produced this node, for graphviz / debugging / etc
+
+
+    ### check - rename to uniform or add alias - why? why not?
+    @classmethod
+    def rand(cls, *size, requires_grad=False):
+        """random uniform dist [0,1] helper"""
+        return cls( np.random.rand( *size ), requires_grad=requires_grad)
 
 
     def backward(self, grad=None):
@@ -24,7 +52,7 @@ class Tensor (object):
                 topo.append(v)
         build_topo(self)
    
-        if type(grad) == type(None):
+        if grad is None:
             grad = np.ones_like( self.data )
 
         ## note - grad is NOT wrapped / a tensor!
@@ -46,14 +74,14 @@ class Tensor (object):
         ##   assert shape - self.data same as grad!!
         ##    input and input_grad MUST always be same shape
         ##    assert_shape here
-        if type(self.grad) == type(None):
+        if self.grad is None:
            self.grad = grad
         else:    ## accumulate gradients
            self.grad += grad          
        
 
     def _backward(self):
-        print( f"--backward _op={self._op}, output_gradient={self.grad}")
+        ## print( f"--backward _op={self._op}, output_gradient={self.grad}")
         
         ## todo
         ##  assert shape - self.data same as self.grad!!
@@ -77,7 +105,14 @@ class Tensor (object):
             c0._input_grad( output_grad.dot(c1.data.T) )
             c1._input_grad( output_grad.T.dot(c0.data).T )
         if(self._op == "transpose"):
-            self.creators[0]._input_grad( output_grad.T )
+            self._creators[0]._input_grad( output_grad.T )
+        if(isinstance(self._op,str) and self._op.startswith( "sum_")):
+            dim = int(self._op.split("_")[1])
+            self._creators[0]._input_grad( 
+                    _np_expand( output_grad, dim, self._creators[0].data.shape[dim]))
+        if(isinstance(self._op, str) and self._op.startswith("expand_")):
+            dim = int(self._op.split("_")[1])
+            self._creators[0]._input_grad( output_grad.sum(axis=dim) )
         if(self._op == "neg"):
             self._creators[0]._input_grad( -output_grad )
 
@@ -110,6 +145,22 @@ class Tensor (object):
                           _creators=[self,other], _op="mul")
         return Tensor(self.data * other.data)   
 
+    def sum(self, dim):
+        if(self.requires_grad):
+            return Tensor(self.data.sum(axis=dim),
+                          requires_grad=True,
+                          _creators=[self], _op="sum_"+str(dim))
+        return Tensor(self.data.sum(axis=dim))
+    
+    def expand(self, dim, copies):
+        new_data = _np_expand( self.data, dim, copies )     
+        if(self.requires_grad):
+            return Tensor(new_data,
+                          requires_grad=True,
+                          _creators=[self], _op="expand_"+str(dim))
+        return Tensor(new_data)
+
+    ## todo - add T property!!!
     def transpose(self):
         if(self.requires_grad):
             return Tensor(self.data.T,
@@ -117,6 +168,7 @@ class Tensor (object):
                           _creators=[self], _op="transpose")
         return Tensor(self.data.T)
     
+    ## todo - use new __matmul__ !!! allows @-operator
     def mm(self, x):
         if(self.requires_grad or x.requires_grad):
             return Tensor(self.data.dot(x.data),  ## try matmul or @ such!!   
