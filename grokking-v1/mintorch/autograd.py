@@ -20,7 +20,7 @@ def _np_expand_copies(data, dim, copies):
     return np.repeat(np.expand_dims(data, axis=dim), copies, axis=dim)
 
 
-class Tensor (object):   
+class Tensor():   
 
     def __init__(self, data, requires_grad=False, _creators=(), _op=None):
         self.data = np.array(data, dtype=np.float32)   ### always - autoconvert to dtype float32!!!
@@ -183,3 +183,20 @@ class Tensor (object):
     def __str__(self):
         return  f"tensor({self.data.__str__()}, shape={self.data.shape}, ndim={self.data.ndim}, dtype={self.data.dtype})"
     
+
+
+class SGD():
+    def __init__(self, parameters, alpha=0.1):
+        self.parameters = parameters
+        self.alpha = alpha
+    
+    def zero(self):
+        for p in self.parameters:
+            p.grad = None
+        
+    def step(self, zero=True):     
+        for p in self.parameters:
+            p.data -= p.grad * self.alpha
+            if(zero):
+                p.grad = None
+        

@@ -1,4 +1,4 @@
-from mintorch import Tensor 
+from mintorch import Tensor, SGD 
 
 
 data   = Tensor([[0,0],[0,1],[1,0],[1,1]])
@@ -9,19 +9,18 @@ w.append(Tensor.rand(2,3, requires_grad=True))
 w.append(Tensor.rand(3,1, requires_grad=True))
 
 
+optim = SGD(parameters=w, alpha=0.1)
+
 for i in range(10):
     # Predict
     pred = data.mm(w[0]).mm(w[1])
     # Compare
-    loss = ((pred - target)*(pred - target)).sum(dim=0)
+    loss = ((pred - target)*(pred - target)).sum(dim=0)   
     # Learn
     loss.backward()
-    for w_ in w:
-        w_.data -= w_.grad * 0.1
-        w_.grad = None              ## set to zero (note: uses None like pytorch instead)
+    optim.step()
 
     print("loss=", loss)
-
 
 
 print("bye")

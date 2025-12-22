@@ -1,2 +1,2 @@
 
-from .autograd import Tensor
+from .autograd import Tensor, SGD
