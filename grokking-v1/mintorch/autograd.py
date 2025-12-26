@@ -39,6 +39,11 @@ class Tensor():
         """random uniform dist [0,1] helper"""
         return cls( np.random.rand( *size ), requires_grad=requires_grad)
 
+    @classmethod
+    def zeros(cls, *size, requires_grad=False):
+        return cls( np.zeros( *size ), requires_grad=requires_grad)
+        
+
 
     def backward(self, grad=None):
         # topological order all of the children in the graph
@@ -115,6 +120,13 @@ class Tensor():
             self._creators[0]._input_grad( output_grad.sum(axis=dim) )
         if(self._op == "neg"):
             self._creators[0]._input_grad( -output_grad )
+        if(self._op == "sigmoid"):
+            ones = np.ones_like(output_grad)
+            self._creators[0]._input_grad(output_grad * (self.data * (ones - self.data)))
+        if(self._op == "tanh"):
+            ones = np.ones_like(output_grad)
+            self._creators[0]._input_grad(output_grad * (ones - (self.data * self.data)))
+
 
 
     def __add__(self, other):
@@ -183,6 +195,23 @@ class Tensor():
         return self.__matmul__(x)
 
 
+    def sigmoid(self):
+        if(self.requires_grad):
+            return Tensor(1 / (1 + np.exp(-self.data)),
+                          requires_grad=True,
+                          _creators=[self],
+                          _op="sigmoid")
+        return Tensor(1 / (1 + np.exp(-self.data)))
+
+    def tanh(self):
+        if(self.requires_grad):
+            return Tensor(np.tanh(self.data),
+                          requires_grad=True,
+                          _creators=[self],
+                          _op="tanh")
+        return Tensor(np.tanh(self.data))
+
+
     def __repr__(self):
         return str(self.data.__repr__())
     
@@ -205,4 +234,4 @@ class SGD():
             p.data -= p.grad * self.lr
             if(zero):
                 p.grad = None
-        
+
