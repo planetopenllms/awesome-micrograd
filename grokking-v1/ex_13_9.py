@@ -42,5 +42,17 @@ print( x.grad )
 print( W.grad )
 
 
+print( "--" )
+x = Tensor( [[1,2]], requires_grad=True )   # (1x2)
+W = Tensor( [[.1,.2,.3],[.4,.5,.6]], requires_grad=True)   # (2x3)
+
+y = x @ W
+y.backward()    # (1x3)
+
+print( y ) 
+print( x.grad ) 
+print( W.grad )
+
+
 print( "bye" )
 

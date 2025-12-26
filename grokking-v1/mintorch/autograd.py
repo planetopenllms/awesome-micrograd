@@ -4,7 +4,7 @@ import numpy as np
 ## helper to expand np array
 ##      check if there's something builtin
 #       from the book Grokking Deep Learning
-def _np_expand(data, dim, copies):
+def _np_expand_old(data, dim, copies):
     trans_cmd = list(range(0,len(data.shape)))
     trans_cmd.insert(dim,len(data.shape))
     new_data = data.repeat(copies).reshape(list(data.shape) + [copies]).transpose(trans_cmd)
@@ -13,7 +13,7 @@ def _np_expand(data, dim, copies):
 ##
 ## todo - replace with simpler version - why? why not?
 ##          check/assert if both are the same
-def _np_expand_copies(data, dim, copies):
+def _np_expand(data, dim, copies):
     # bonus - allow negative dims: convert to insertion index in [0, data.ndim]
     # if dim < 0:
     #    dim += data.ndim + 1
@@ -102,8 +102,8 @@ class Tensor():
         if(self._op == "mm"):
             c0 = self._creators[0]
             c1 = self._creators[1]
-            c0._input_grad( output_grad.dot(c1.data.T) )
-            c1._input_grad( output_grad.T.dot(c0.data).T )
+            c0._input_grad( np.matmul(output_grad, c1.data.T) )
+            c1._input_grad( np.matmul(output_grad.T, c0.data).T )
         if(self._op == "transpose"):
             self._creators[0]._input_grad( output_grad.T )
         if(isinstance(self._op,str) and self._op.startswith( "sum_")):
@@ -160,21 +160,27 @@ class Tensor():
                           _creators=[self], _op="expand_"+str(dim))
         return Tensor(new_data)
 
-    ## todo - add T property!!!
     def transpose(self):
         if(self.requires_grad):
             return Tensor(self.data.T,
                           requires_grad=True,
                           _creators=[self], _op="transpose")
         return Tensor(self.data.T)
-    
-    ## todo - use new __matmul__ !!! allows @-operator
-    def mm(self, x):
+   
+    @property
+    def T(self):
+        return self.transpose()
+   
+
+    def __matmul__(self,x):
         if(self.requires_grad or x.requires_grad):
-            return Tensor(self.data.dot(x.data),  ## try matmul or @ such!!   
+            return Tensor(np.matmul(self.data, x.data),    
                           requires_grad=True,
                           _creators=[self,x], _op="mm")
-        return Tensor(self.data.dot(x.data))
+        return Tensor(np.matmul(self.data, x.data))
+
+    def mm(self, x):
+        return self.__matmul__(x)
 
 
     def __repr__(self):
@@ -186,9 +192,9 @@ class Tensor():
 
 
 class SGD():
-    def __init__(self, parameters, alpha=0.1):
+    def __init__(self, parameters, lr=0.1):
         self.parameters = parameters
-        self.alpha = alpha
+        self.lr = lr
     
     def zero(self):
         for p in self.parameters:
@@ -196,7 +202,7 @@ class SGD():
         
     def step(self, zero=True):     
         for p in self.parameters:
-            p.data -= p.grad * self.alpha
+            p.data -= p.grad * self.lr
             if(zero):
                 p.grad = None
         

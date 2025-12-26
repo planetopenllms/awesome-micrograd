@@ -9,7 +9,7 @@ w.append(Tensor.rand(2,3, requires_grad=True))
 w.append(Tensor.rand(3,1, requires_grad=True))
 
 
-optim = SGD(parameters=w, alpha=0.1)
+optim = SGD(parameters=w, lr=0.1)
 
 for i in range(10):
     # Predict
