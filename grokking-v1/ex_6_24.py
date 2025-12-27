@@ -28,11 +28,11 @@ for iteration in range(60):
    for i in range(len(streetlights)): 
       ## predict
       x = Tensor(streetlights[i:i+1])
-      y = Tensor(walk_vs_stop[i:i+1])
       y_hat = model( x ) 
       # Compare
+      y = Tensor(walk_vs_stop[i:i+1])
       loss = criterion(y_hat, y)
-      layer_2_error += loss.data   ## use loss.item() ???
+      layer_2_error += loss.data.sum()    ## use loss.item() ???
       # Learn
       optimizer.zero_grad()
       loss.backward()
@@ -43,3 +43,21 @@ for iteration in range(60):
 
 
 print( "bye" )
+
+"""
+Error: 1.3428703546524048
+Error: 1.1580779552459717
+Error: 0.9731759428977966
+Error: 0.8535886406898499
+Error: 0.8214600682258606
+Error: 0.8197005391120911
+
+--or--
+
+Error: 0.48454803228378296
+Error: 0.04550359770655632
+Error: 0.004576224833726883
+Error: 0.0003909869119524956
+Error: 2.9069948141113855e-05
+Error: 2.4260564259748207e-06
+"""
