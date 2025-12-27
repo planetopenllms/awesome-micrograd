@@ -2,15 +2,20 @@ from .autograd import Tensor
 import numpy as np
 
 
-class Layer():
+class Module():
     def __init__(self):
-        self.parameters = list()  ## note: same as []
-        
-    def get_parameters(self):
-        return self.parameters
+        self.params = list()  ## note: same as []
+                              ##   rename to _paramaters (from params) - why? why not?         
+    def parameters(self):
+        return self.params
+
+    ## forward/alias to forward  - just use __call__ = forward or such - why? why not?
+    def __call__(self, *args, **kwargs):   
+        return self.forward(*args, **kwargs)
 
 
-class Linear(Layer):
+
+class Linear(Module):
     def __init__(self, n_inputs, n_outputs):
         super().__init__()
         ## uses he/()-init with normal dist
@@ -19,14 +24,14 @@ class Linear(Layer):
         self.weight = Tensor(W, requires_grad=True)
         self.bias   = Tensor.zeros(n_outputs, requires_grad=True)
         
-        self.parameters.append(self.weight)
-        self.parameters.append(self.bias)
+        self.params.append(self.weight)
+        self.params.append(self.bias)
 
     def forward(self, input):
         ## note: no "broadcast" used for bias; bias gets expanded for batch dim
         return input.mm(self.weight)+self.bias.expand(dim=0,copies=len(input.data))
     
-class Sequential(Layer):    
+class Sequential(Module):    
     def __init__(self, layers=list()):
         super().__init__()
         self.layers = layers
@@ -39,16 +44,16 @@ class Sequential(Layer):
             input = layer.forward(input)
         return input
     
-    def get_parameters(self):
+    def parameters(self):
         params = list()
         for l in self.layers:
-            params += l.get_parameters()
+            params += l.parameters()
         return params
     
 
 ###
 # -- loss function layers
-class MSELoss(Layer):
+class MSELoss(Module):
     def __init__(self):
         super().__init__()
     
@@ -58,14 +63,14 @@ class MSELoss(Layer):
     
 ###
 # -- activation function layers
-class Tanh(Layer):
+class Tanh(Module):
     def __init__(self):
         super().__init__()
     
     def forward(self, input):
         return input.tanh()
     
-class Sigmoid(Layer):
+class Sigmoid(Module):
     def __init__(self):
         super().__init__()
     

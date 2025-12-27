@@ -219,19 +219,3 @@ class Tensor():
         return  f"tensor({self.data.__str__()}, shape={self.data.shape}, ndim={self.data.ndim}, dtype={self.data.dtype})"
     
 
-
-class SGD():
-    def __init__(self, parameters, lr=0.1):
-        self.parameters = parameters
-        self.lr = lr
-    
-    def zero(self):
-        for p in self.parameters:
-            p.grad = None
-        
-    def step(self, zero=True):     
-        for p in self.parameters:
-            p.data -= p.grad * self.lr
-            if(zero):
-                p.grad = None
-

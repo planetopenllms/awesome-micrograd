@@ -1,5 +1,4 @@
-from mintorch import Tensor, SGD
-from mintorch import nn
+from mintorch import Tensor, nn, optim
 
 
 
@@ -9,16 +8,17 @@ target = Tensor([[0],[1],[0],[1]])
 model = nn.Sequential([nn.Linear(2,3), nn.Linear(3,1)])
 criterion = nn.MSELoss()
 
-optim = SGD(parameters=model.get_parameters(), lr=0.05)
+optimizer = optim.SGD(parameters=model.parameters(), lr=0.05)
 
 for i in range(10):
     # Predict
-    pred = model.forward(data)
+    pred = model(data)
     # Compare
-    loss = criterion.forward(pred, target)
+    loss = criterion(pred, target)
     # Learn
+    optimizer.zero_grad()
     loss.backward()
-    optim.step()
+    optimizer.step()
     print("loss=", loss)
 
 
