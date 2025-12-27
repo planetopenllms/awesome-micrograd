@@ -18,8 +18,10 @@ class Module():
 class Linear(Module):
     def __init__(self, n_inputs, n_outputs):
         super().__init__()
-        ## uses he/()-init with normal dist
+        ## uses he/kaiming()-init with normal dist
         ##  fix use Tensor.normal( 0, var? or std=  sqrt(2.0/n_inputs))
+        ##    fix use he/kaiming_init helper or such
+        ##     plus allow passing in of different weight_init methods a la pytorch
         W = np.random.randn(n_inputs, n_outputs) * np.sqrt(2.0/(n_inputs))
         self.weight = Tensor(W, requires_grad=True)
         self.bias   = Tensor.zeros(n_outputs, requires_grad=True)

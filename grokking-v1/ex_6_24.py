@@ -13,11 +13,20 @@ streetlights = np.array( [[ 1, 0, 1 ],
 walk_vs_stop = np.array([[1], [1], [0], [0]])
 
 
-lr = 0.1
+lr = 0.2
 hidden_size = 4
 
-model = nn.Sequential( [nn.Linear(3, hidden_size), nn.ReLU(),
-                        nn.Linear( hidden_size, 1)] )
+
+layer1 = nn.Linear(3, hidden_size)
+layer2 = nn.Linear(hidden_size, 1)
+
+## note - use same weight init as in orginal sample!!!
+layer1.weight.data = 2*np.random.random((3,hidden_size)) - 1
+layer2.weight.data = 2*np.random.random((hidden_size,1)) - 1
+
+
+model = nn.Sequential( [layer1, nn.ReLU(),
+                        layer2] )
 
 criterion = nn.MSELoss()
 optimizer = optim.SGD(parameters=model.parameters(), lr=lr)

@@ -28,8 +28,15 @@ pixels_per_image = 784  # 28x28px
 num_labels = 10
 
 
-model = nn.Sequential( [nn.Linear(pixels_per_image, hidden_size), nn.ReLU(),
-                        nn.Linear( hidden_size, num_labels)] )
+layer1 = nn.Linear(pixels_per_image, hidden_size)
+layer2 = nn.Linear( hidden_size, num_labels)
+
+## note - use same weight init as in orginal sample!!!
+layer1.weight.data = 0.2*np.random.random((pixels_per_image,hidden_size)) - 0.1
+layer2.weight.data = 0.2*np.random.random((hidden_size,num_labels)) - 0.1
+
+model = nn.Sequential( [layer1, nn.ReLU(),
+                        layer2] )
 
 criterion = nn.MSELoss()
 optimizer = optim.SGD(parameters=model.parameters(), lr=lr)
@@ -86,81 +93,41 @@ for j in range(iterations):
 print("\nbye")
 
 """
-I:0 Train-Err:0.72340107 Train-Acc:0.535   Test-Err:0.60074055 Test-Acc:0.6495
- I:10 Train-Err:0.11427351 Train-Acc:0.967   Test-Err:0.29972774 Test-Acc:0.856
- I:20 Train-Err:0.07181338 Train-Acc:0.977   Test-Err:0.30229405 Test-Acc:0.8505
- I:30 Train-Err:0.05436911 Train-Acc:0.979   Test-Err:0.31703812 Test-Acc:0.8401
- I:40 Train-Err:0.04437655 Train-Acc:0.979   Test-Err:0.33039916 Test-Acc:0.8317
- I:50 Train-Err:0.038131103 Train-Acc:0.981   Test-Err:0.33874923 Test-Acc:0.8269
- I:60 Train-Err:0.03379036 Train-Acc:0.981   Test-Err:0.34317666 Test-Acc:0.8239
- I:70 Train-Err:0.030651657 Train-Acc:0.981   Test-Err:0.34791315 Test-Acc:0.8213
- I:80 Train-Err:0.02825887 Train-Acc:0.981   Test-Err:0.35180902 Test-Acc:0.8192
- I:90 Train-Err:0.026346043 Train-Acc:0.982   Test-Err:0.35415533 Test-Acc:0.8209
- I:100 Train-Err:0.024900172 Train-Acc:0.983   Test-Err:0.355324 Test-Acc:0.8208
- I:110 Train-Err:0.023531215 Train-Acc:0.983   Test-Err:0.3567276 Test-Acc:0.8204
- I:120 Train-Err:0.022202648 Train-Acc:0.985   Test-Err:0.358954 Test-Acc:0.8207
- I:130 Train-Err:0.020818228 Train-Acc:0.986   Test-Err:0.36173594 Test-Acc:0.8214
- I:140 Train-Err:0.019814791 Train-Acc:0.986   Test-Err:0.363782 Test-Acc:0.8216
- I:150 Train-Err:0.01899713 Train-Acc:0.986   Test-Err:0.36595035 Test-Acc:0.8214
- I:160 Train-Err:0.018353658 Train-Acc:0.986   Test-Err:0.36767694 Test-Acc:0.8199
- I:170 Train-Err:0.01781888 Train-Acc:0.986   Test-Err:0.36967427 Test-Acc:0.8188
- I:180 Train-Err:0.01736207 Train-Acc:0.986   Test-Err:0.37147698 Test-Acc:0.8183
- I:190 Train-Err:0.016968243 Train-Acc:0.987   Test-Err:0.37287036 Test-Acc:0.8175
- I:200 Train-Err:0.016636686 Train-Acc:0.987   Test-Err:0.3740813 Test-Acc:0.8167
- I:210 Train-Err:0.016309723 Train-Acc:0.988   Test-Err:0.37515277 Test-Acc:0.8172
- I:220 Train-Err:0.016018825 Train-Acc:0.988   Test-Err:0.37612423 Test-Acc:0.816
- I:230 Train-Err:0.0157511 Train-Acc:0.988   Test-Err:0.37709323 Test-Acc:0.8145
- I:240 Train-Err:0.01550582 Train-Acc:0.988   Test-Err:0.378006 Test-Acc:0.8141
- I:250 Train-Err:0.015290265 Train-Acc:0.988   Test-Err:0.3788511 Test-Acc:0.813
- I:260 Train-Err:0.015083465 Train-Acc:0.988   Test-Err:0.3794964 Test-Acc:0.8117
- I:270 Train-Err:0.014900112 Train-Acc:0.988   Test-Err:0.3801948 Test-Acc:0.8112
- I:280 Train-Err:0.014735186 Train-Acc:0.988   Test-Err:0.38083836 Test-Acc:0.8105
- I:290 Train-Err:0.014586992 Train-Acc:0.989   Test-Err:0.38211706 Test-Acc:0.8101
- I:300 Train-Err:0.014448899 Train-Acc:0.989   Test-Err:0.3822238 Test-Acc:0.8104
- I:310 Train-Err:0.014327732 Train-Acc:0.989   Test-Err:0.38334867 Test-Acc:0.8102
- I:320 Train-Err:0.014215632 Train-Acc:0.989   Test-Err:0.38342798 Test-Acc:0.8094
- I:330 Train-Err:0.014114684 Train-Acc:0.989   Test-Err:0.38394699 Test-Acc:0.8087
- I:340 Train-Err:0.014017821 Train-Acc:0.989   Test-Err:0.38480493 Test-Acc:0.8074
- I:349 Train-Err:0.013937371 Train-Acc:0.989   Test-Err:0.38501376 Test-Acc:0.8067
-
- 
- or
-
-  I:0 Train-Err:0.74830335 Train-Acc:0.548   Test-Err:0.6158054 Test-Acc:0.6417
- I:10 Train-Err:0.13460419 Train-Acc:0.971   Test-Err:0.33397514 Test-Acc:0.8573
- I:20 Train-Err:0.08100569 Train-Acc:0.981   Test-Err:0.30984253 Test-Acc:0.8589
- I:30 Train-Err:0.058623902 Train-Acc:0.981   Test-Err:0.31425017 Test-Acc:0.8563
- I:40 Train-Err:0.046935774 Train-Acc:0.981   Test-Err:0.32129526 Test-Acc:0.8515
- I:50 Train-Err:0.040011715 Train-Acc:0.984   Test-Err:0.33514145 Test-Acc:0.8492
- I:60 Train-Err:0.03437703 Train-Acc:0.989   Test-Err:0.34176835 Test-Acc:0.8474
- I:70 Train-Err:0.030137824 Train-Acc:0.99   Test-Err:0.35218453 Test-Acc:0.8429
- I:80 Train-Err:0.026984293 Train-Acc:0.99   Test-Err:0.35865504 Test-Acc:0.8383
- I:90 Train-Err:0.024501793 Train-Acc:0.991   Test-Err:0.3616113 Test-Acc:0.836
- I:100 Train-Err:0.022719864 Train-Acc:0.991   Test-Err:0.36360598 Test-Acc:0.8336
- I:110 Train-Err:0.021315368 Train-Acc:0.991   Test-Err:0.36188877 Test-Acc:0.8324
- I:120 Train-Err:0.020252245 Train-Acc:0.991   Test-Err:0.3640202 Test-Acc:0.8319
- I:130 Train-Err:0.019311626 Train-Acc:0.991   Test-Err:0.36243054 Test-Acc:0.8297
- I:140 Train-Err:0.018559603 Train-Acc:0.991   Test-Err:0.36258665 Test-Acc:0.8278
- I:150 Train-Err:0.017910078 Train-Acc:0.991   Test-Err:0.36329755 Test-Acc:0.828
- I:160 Train-Err:0.017363552 Train-Acc:0.991   Test-Err:0.36543378 Test-Acc:0.8266
- I:170 Train-Err:0.016859159 Train-Acc:0.991   Test-Err:0.36545765 Test-Acc:0.8276
- I:180 Train-Err:0.016431646 Train-Acc:0.991   Test-Err:0.3676907 Test-Acc:0.8285
- I:190 Train-Err:0.016053608 Train-Acc:0.991   Test-Err:0.36930045 Test-Acc:0.8274
- I:200 Train-Err:0.015718985 Train-Acc:0.991   Test-Err:0.3702436 Test-Acc:0.8293
- I:210 Train-Err:0.015354824 Train-Acc:0.991   Test-Err:0.37125885 Test-Acc:0.827
- I:220 Train-Err:0.0151410615 Train-Acc:0.991   Test-Err:0.3727412 Test-Acc:0.8272
- I:230 Train-Err:0.01483373 Train-Acc:0.991   Test-Err:0.37461567 Test-Acc:0.8244
- I:240 Train-Err:0.014590886 Train-Acc:0.991   Test-Err:0.37574184 Test-Acc:0.8236
- I:250 Train-Err:0.014342365 Train-Acc:0.991   Test-Err:0.3778399 Test-Acc:0.8224
- I:260 Train-Err:0.01416446 Train-Acc:0.991   Test-Err:0.37818488 Test-Acc:0.8214
- I:270 Train-Err:0.013921858 Train-Acc:0.991   Test-Err:0.38006887 Test-Acc:0.821
- I:280 Train-Err:0.01449179 Train-Acc:0.991   Test-Err:0.3831643 Test-Acc:0.816
- I:290 Train-Err:0.013561413 Train-Acc:0.991   Test-Err:0.38235238 Test-Acc:0.8197
- I:300 Train-Err:0.013324749 Train-Acc:0.991   Test-Err:0.38340795 Test-Acc:0.8183
- I:310 Train-Err:0.013320643 Train-Acc:0.991   Test-Err:0.38422823 Test-Acc:0.8167
- I:320 Train-Err:0.013271884 Train-Acc:0.991   Test-Err:0.38580078 Test-Acc:0.8184
- I:330 Train-Err:0.013205145 Train-Acc:0.991   Test-Err:0.3854479 Test-Acc:0.8167
- I:340 Train-Err:0.012913284 Train-Acc:0.991   Test-Err:0.38558492 Test-Acc:0.8176
- I:349 Train-Err:0.012612738 Train-Acc:0.991   Test-Err:0.38849232 Test-Acc:0.8192
- """
+ I:0 Train-Err:0.6437854 Train-Acc:0.592   Test-Err:0.5196275 Test-Acc:0.6764
+ I:10 Train-Err:0.123614736 Train-Acc:0.973   Test-Err:0.28411096 Test-Acc:0.8677
+ I:20 Train-Err:0.06862172 Train-Acc:0.994   Test-Err:0.2832052 Test-Acc:0.8666
+ I:30 Train-Err:0.04301278 Train-Acc:0.998   Test-Err:0.2903944 Test-Acc:0.8614
+ I:40 Train-Err:0.02852836 Train-Acc:0.999   Test-Err:0.2957293 Test-Acc:0.8565
+ I:50 Train-Err:0.020082243 Train-Acc:0.999   Test-Err:0.29924402 Test-Acc:0.8529
+ I:60 Train-Err:0.014799728 Train-Acc:0.999   Test-Err:0.3024055 Test-Acc:0.8497
+ I:70 Train-Err:0.011213454 Train-Acc:0.999   Test-Err:0.30363646 Test-Acc:0.8478
+ I:80 Train-Err:0.008763285 Train-Acc:0.999   Test-Err:0.30392343 Test-Acc:0.8486
+ I:90 Train-Err:0.0070623825 Train-Acc:0.999   Test-Err:0.30594626 Test-Acc:0.8449
+ I:100 Train-Err:0.005788165 Train-Acc:0.999   Test-Err:0.30709955 Test-Acc:0.8442
+ I:110 Train-Err:0.004795009 Train-Acc:0.999   Test-Err:0.3085815 Test-Acc:0.8432
+ I:120 Train-Err:0.003982355 Train-Acc:1.0   Test-Err:0.3102795 Test-Acc:0.8433
+ I:130 Train-Err:0.0033131812 Train-Acc:1.0   Test-Err:0.31149244 Test-Acc:0.8409
+ I:140 Train-Err:0.0027536075 Train-Acc:1.0   Test-Err:0.3124654 Test-Acc:0.8397
+ I:150 Train-Err:0.0023030408 Train-Acc:1.0   Test-Err:0.3134914 Test-Acc:0.8392
+ I:160 Train-Err:0.0019244569 Train-Acc:1.0   Test-Err:0.31451443 Test-Acc:0.8382
+ I:170 Train-Err:0.0016129905 Train-Acc:1.0   Test-Err:0.31543374 Test-Acc:0.8362
+ I:180 Train-Err:0.0013583514 Train-Acc:1.0   Test-Err:0.3162579 Test-Acc:0.8355
+ I:190 Train-Err:0.0011521218 Train-Acc:1.0   Test-Err:0.31699052 Test-Acc:0.8349
+ I:200 Train-Err:0.00097604643 Train-Acc:1.0   Test-Err:0.3176635 Test-Acc:0.8333
+ I:210 Train-Err:0.0008321175 Train-Acc:1.0   Test-Err:0.3182687 Test-Acc:0.8329
+ I:220 Train-Err:0.00071147265 Train-Acc:1.0   Test-Err:0.3187628 Test-Acc:0.8318
+ I:230 Train-Err:0.0006104857 Train-Acc:1.0   Test-Err:0.31899792 Test-Acc:0.8322
+ I:240 Train-Err:0.000530664 Train-Acc:1.0   Test-Err:0.31935847 Test-Acc:0.8318
+ I:250 Train-Err:0.000463174 Train-Acc:1.0   Test-Err:0.3195723 Test-Acc:0.8318
+ I:260 Train-Err:0.00041201708 Train-Acc:1.0   Test-Err:0.3197897 Test-Acc:0.8315
+ I:270 Train-Err:0.00036382306 Train-Acc:1.0   Test-Err:0.3200498 Test-Acc:0.8313
+ I:280 Train-Err:0.00032761318 Train-Acc:1.0   Test-Err:0.3202568 Test-Acc:0.8312
+ I:290 Train-Err:0.00029652243 Train-Acc:1.0   Test-Err:0.3205419 Test-Acc:0.8309
+ I:300 Train-Err:0.000268508 Train-Acc:1.0   Test-Err:0.32069498 Test-Acc:0.8298
+ I:310 Train-Err:0.00024386332 Train-Acc:1.0   Test-Err:0.32094815 Test-Acc:0.8291
+ I:320 Train-Err:0.00022524275 Train-Acc:1.0   Test-Err:0.32123294 Test-Acc:0.8284
+ I:330 Train-Err:0.00020556158 Train-Acc:1.0   Test-Err:0.32151625 Test-Acc:0.8282
+ I:340 Train-Err:0.00018873175 Train-Acc:1.0   Test-Err:0.3217621 Test-Acc:0.8281
+ I:349 Train-Err:0.00017626908 Train-Acc:1.0   Test-Err:0.32199427 Test-Acc:0.8275
+"""
 

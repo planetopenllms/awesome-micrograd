@@ -40,6 +40,11 @@ class Tensor():
         return cls( np.random.rand( *size ), requires_grad=requires_grad)
 
     @classmethod
+    def randn(cls, *size, requires_grad=False):
+        """random normal dist with mean 0 and std.dev 1 helper"""
+        return cls( np.random.randn( *size ), requires_grad=requires_grad)
+
+    @classmethod
     def zeros(cls, *size, requires_grad=False):
         return cls( np.zeros( *size ), requires_grad=requires_grad)
         
