@@ -126,7 +126,8 @@ class Tensor():
         if(self._op == "tanh"):
             ones = np.ones_like(output_grad)
             self._creators[0]._input_grad(output_grad * (ones - (self.data * self.data)))
-
+        if(self._op == "relu"):
+            self._creators[0]._input_grad(output_grad * (self.data > 0))
 
 
     def __add__(self, other):
@@ -210,6 +211,15 @@ class Tensor():
                           _creators=[self],
                           _op="tanh")
         return Tensor(np.tanh(self.data))
+
+    def relu(self):
+        if(self.requires_grad):
+            return Tensor( np.maximum(0, self.data),
+                            requires_grad=True,
+                            _creators=[self],
+                            _op="relu")
+        return Tensor(np.maximum(0, self.data))
+   
 
 
     def __repr__(self):

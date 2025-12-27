@@ -76,3 +76,11 @@ class Sigmoid(Module):
     
     def forward(self, input):
         return input.sigmoid()
+    
+class ReLU(Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, input):
+        return input.relu()    
+    
