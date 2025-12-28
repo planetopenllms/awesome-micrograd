@@ -16,16 +16,12 @@ y = Tensor.randn( N, D_out )
 
 lr =   0.000001     ## 1e-6
 
-layer1 = nn.Linear(D_in, H)
-layer2 = nn.Linear(H, D_out)
 
+model = nn.Sequential( nn.Linear(D_in, H, bias=False), nn.ReLU(),
+                       nn.Linear(H, D_out, bias=False) )
 ## note - use same weight init as in orginal sample!!!
-layer1.weight.data = np.random.randn(D_in, H)
-layer2.weight.data = np.random.randn(H, D_out)
-
-
-model = nn.Sequential( [layer1, nn.ReLU(),
-                        layer2] )
+model[0].weight.data = np.random.randn(D_in, H)
+model[2].weight.data = np.random.randn(H, D_out)
 
 
 criterion = nn.MSELoss()

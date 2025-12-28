@@ -16,7 +16,7 @@ class Module():
 
 
 class Linear(Module):
-    def __init__(self, n_inputs, n_outputs):
+    def __init__(self, n_inputs, n_outputs, bias=True):
         super().__init__()
         ## uses he/kaiming()-init with normal dist
         ##  fix use Tensor.normal( 0, var? or std=  sqrt(2.0/n_inputs))
@@ -24,19 +24,30 @@ class Linear(Module):
         ##     plus allow passing in of different weight_init methods a la pytorch
         W = np.random.randn(n_inputs, n_outputs) * np.sqrt(2.0/(n_inputs))
         self.weight = Tensor(W, requires_grad=True)
-        self.bias   = Tensor.zeros(n_outputs, requires_grad=True)
-        
         self.params.append(self.weight)
-        self.params.append(self.bias)
+        
+        if bias:
+          self.bias = Tensor.zeros(n_outputs, requires_grad=True)
+          self.params.append(self.bias)
+        else:
+          self.bias = None
+
 
     def forward(self, input):
         ## note: no "broadcast" used for bias; bias gets expanded for batch dim
-        return input.mm(self.weight)+self.bias.expand(dim=0,copies=len(input.data))
+        x = input.mm(self.weight)
+        if self.bias is not None:
+            x += self.bias.expand(dim=0,copies=len(input.data))
+        return x 
     
+
 class Sequential(Module):    
-    def __init__(self, layers=list()):
+    def __init__(self, *layers):
         super().__init__()
-        self.layers = layers
+        # convenience & backward compat - accept either multiple args or a single iterable
+        if len(layers) == 1 and isinstance(layers[0], (list, tuple)):
+            layers = layers[0]
+        self.layers = list(layers)
     
     def add(self, layer):
         self.layers.append(layer)
@@ -51,7 +62,12 @@ class Sequential(Module):
         for l in self.layers:
             params += l.parameters()
         return params
-    
+
+    #####################
+    ## add access-via []  e.g. layer[0].weight etc.
+    def __getitem__(self, index): return self.layers[index]
+    def __len__(self):  return len(self.layers)
+
 
 ###
 # -- loss function layers

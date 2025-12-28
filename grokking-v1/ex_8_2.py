@@ -28,15 +28,15 @@ pixels_per_image = 784  # 28x28px
 num_labels = 10
 
 
-layer1 = nn.Linear(pixels_per_image, hidden_size)
-layer2 = nn.Linear( hidden_size, num_labels)
 
+model = nn.Sequential( nn.Linear(pixels_per_image, hidden_size, bias=False), nn.ReLU(),
+                       nn.Linear( hidden_size, num_labels, bias=False) )
 ## note - use same weight init as in orginal sample!!!
-layer1.weight.data = 0.2*np.random.random((pixels_per_image,hidden_size)) - 0.1
-layer2.weight.data = 0.2*np.random.random((hidden_size,num_labels)) - 0.1
+##    and random seed
+np.random.seed(1)
+model[0].weight.data = 0.2*np.random.random((pixels_per_image,hidden_size)) - 0.1
+model[2].weight.data = 0.2*np.random.random((hidden_size,num_labels)) - 0.1
 
-model = nn.Sequential( [layer1, nn.ReLU(),
-                        layer2] )
 
 criterion = nn.MSELoss()
 optimizer = optim.SGD(parameters=model.parameters(), lr=lr)
@@ -58,7 +58,7 @@ for j in range(iterations):
         loss   = criterion(y_hat, y)
         ##   note - add sum() here to add-up/sum the multi-category loss
         error += loss.data.sum()    ## use loss.item() ???
-        correct_cnt += int(np.argmax(y_hat.data) == \
+        correct_cnt += int(np.argmax(y_hat.data) == 
                                np.argmax(labels[i:i+1])) 
         ## Learn
         optimizer.zero_grad()
@@ -66,9 +66,9 @@ for j in range(iterations):
         optimizer.step()
 
 
-    sys.stdout.write("\r I:"+str(j)+ \
-                     " Train-Err:" + str(error/len(images)) +\
-                     " Train-Acc:" + str(correct_cnt/len(images)) +\
+    sys.stdout.write(f"\r I:{j}"
+                     f" Train-Err:{error/len(images)}" 
+                     f" Train-Acc:{correct_cnt/len(images)}" 
                      "  ")
 
 
@@ -82,10 +82,10 @@ for j in range(iterations):
             y_test = Tensor(test_labels[i:i+1]) 
             loss = criterion(y_hat, y_test)
             error += loss.data.sum()
-            correct_cnt += int(np.argmax(y_hat.data) == \
+            correct_cnt += int(np.argmax(y_hat.data) == 
                                 np.argmax(test_labels[i:i+1]))
-        sys.stdout.write(" Test-Err:" + str(error/len(test_images)) +\
-                         " Test-Acc:" + str(correct_cnt/len(test_images)) +\
+        sys.stdout.write(f" Test-Err:{error/len(test_images)}"  
+                         f" Test-Acc:{correct_cnt/len(test_images)}"  
                          "         " )
         print()
 
