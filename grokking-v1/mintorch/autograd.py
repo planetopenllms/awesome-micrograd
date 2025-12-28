@@ -21,7 +21,6 @@ def _np_expand(data, dim, copies):
 
 
 class Tensor():   
-
     def __init__(self, data, requires_grad=False, _creators=(), _op=None):
         self.data = np.array(data, dtype=np.float32)   ### always - autoconvert to dtype float32!!!
         self.grad = None
@@ -133,6 +132,8 @@ class Tensor():
             self._creators[0]._input_grad(output_grad * (ones - (self.data * self.data)))
         if(self._op == "relu"):
             self._creators[0]._input_grad(output_grad * (self.data > 0))
+        if(self._op == "dropout"):
+            self._creators[0]._input_grad(output_grad * self.mask)
 
 
     def __add__(self, other):
@@ -164,11 +165,12 @@ class Tensor():
         return Tensor(self.data * other.data)   
 
     def sum(self, dim):
+        new_data = self.data.sum(axis=dim)
         if(self.requires_grad):
-            return Tensor(self.data.sum(axis=dim),
+            return Tensor(new_data,
                           requires_grad=True,
                           _creators=[self], _op="sum_"+str(dim))
-        return Tensor(self.data.sum(axis=dim))
+        return Tensor(new_data)
     
     def expand(self, dim, copies):
         new_data = _np_expand( self.data, dim, copies )     
@@ -225,6 +227,22 @@ class Tensor():
                             _op="relu")
         return Tensor(np.maximum(0, self.data))
    
+
+    def dropout(self, p=0.5):
+        keep_prob = 1.0 - p
+        # create mask of same shape with entries 1/keep_prob 
+        # where kept, 0 where dropped
+        mask = (np.random.rand(*self.data.shape) < keep_prob)
+        mask = mask / keep_prob  # inverted dropout scaling
+        new_data =  self.data * mask
+        if(self.requires_grad):
+           out = Tensor( new_data,
+                           requires_grad=True,
+                           _creators=[self],
+                           _op="dropout")
+           out.mask = mask
+           return out
+        return Tensor(new_data)
 
 
     def __repr__(self):
