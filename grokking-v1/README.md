@@ -12,6 +12,8 @@ for the original code and write-up.
 
 ## open questions / todos - discuss
 
+- [ ]  use generator with yield for parameters
+- [ ]  use _parameters dict in Module base and register_parameter() in nn.Linear and others
 - [x]  use raw gradient (NOT wrapped in own Tensor) - why? why not?
 - [x]  rework / recheck  - requires_grad check / propagation
 - [ ]  autoadd name (if not given)   e.g. _v1, _v2, etc.  - use global count

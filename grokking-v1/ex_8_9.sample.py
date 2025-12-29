@@ -1,19 +1,19 @@
+###
+##
+#   note:
+#     maybe dropout backprob is not 100% correct
+#       2 = 1/(1-0.5)
+#       dropout_mask * 2
+#    why not dropout_mask inline e.g.
+#       dropout_mask = dropout_mask*2
+#    and than in backward
+#       dropout_mask "automagically" includes scaling factor (1/1-p)
+
+
 import sys, numpy as np
-from keras.datasets import mnist
+import mnist
 
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
-
-images, labels = (x_train[0:1000].reshape(1000,28*28) / 255, y_train[0:1000])
-
-one_hot_labels = np.zeros((len(labels),10))
-for i,l in enumerate(labels):
-    one_hot_labels[i][l] = 1
-labels = one_hot_labels
-
-test_images = x_test.reshape(len(x_test),28*28) / 255
-test_labels = np.zeros((len(y_test),10))
-for i,l in enumerate(y_test):
-    test_labels[i][l] = 1
+(images, labels), (test_images, test_labels) = mnist.load_data()
 
 
 np.random.seed(1)
@@ -49,9 +49,8 @@ for j in range(iterations):
         weights_0_1 += alpha * layer_0.T.dot(layer_1_delta)
 
     if(j%10 == 0):
-        test_error = 0.0
-        test_correct_cnt = 0
-
+        test_error, test_correct_cnt = (0.0,0)
+         
         for i in range(len(test_images)):
             layer_0 = test_images[i:i+1]
             layer_1 = relu(np.dot(layer_0,weights_0_1))
@@ -101,5 +100,46 @@ I:250 Test-Err:0.395 Test-Acc:0.8182 Train-Err:0.320 Train-Acc:0.899
 I:260 Test-Err:0.390 Test-Acc:0.8204 Train-Err:0.321 Train-Acc:0.899
 I:270 Test-Err:0.382 Test-Acc:0.8194 Train-Err:0.312 Train-Acc:0.906
 I:280 Test-Err:0.396 Test-Acc:0.8208 Train-Err:0.317 Train-Acc:0.9
-I:290 Test-Err:0.399 Test-Acc:0.8181 Train-Err:0.301 Train-Acc:0.90
+I:290 Test-Err:0.399 Test-Acc:0.8181 Train-Err:0.301 Train-Acc:0.908
+
+vs
+using 
+        dropout_mask = np.random.randint(2, size=layer_1.shape)
+        dropout_mask *= 2
+        layer_1 *= dropout_mask 
+          instead of
+        dropout_mask = np.random.randint(2, size=layer_1.shape)
+        layer_1 *= dropout_mask * 2
+        note - difference is in backprop!
+
+I:0 Test-Err:0.625 Test-Acc:0.6522 Train-Err:0.842 Train-Acc:0.456
+I:10 Test-Err:0.445 Test-Acc:0.7872 Train-Err:0.442 Train-Acc:0.797
+I:20 Test-Err:0.413 Test-Acc:0.8129 Train-Err:0.402 Train-Acc:0.838
+I:30 Test-Err:0.407 Test-Acc:0.8211 Train-Err:0.393 Train-Acc:0.843
+I:40 Test-Err:0.411 Test-Acc:0.8126 Train-Err:0.386 Train-Acc:0.846
+I:50 Test-Err:0.413 Test-Acc:0.804 Train-Err:0.384 Train-Acc:0.842
+I:60 Test-Err:0.415 Test-Acc:0.8057 Train-Err:0.368 Train-Acc:0.849
+I:70 Test-Err:0.411 Test-Acc:0.7993 Train-Err:0.360 Train-Acc:0.877
+I:80 Test-Err:0.403 Test-Acc:0.8092 Train-Err:0.352 Train-Acc:0.884
+I:90 Test-Err:0.413 Test-Acc:0.8045 Train-Err:0.360 Train-Acc:0.869
+I:100 Test-Err:0.410 Test-Acc:0.7918 Train-Err:0.345 Train-Acc:0.888
+I:110 Test-Err:0.409 Test-Acc:0.7951 Train-Err:0.340 Train-Acc:0.88
+I:120 Test-Err:0.409 Test-Acc:0.7896 Train-Err:0.340 Train-Acc:0.891
+I:130 Test-Err:0.412 Test-Acc:0.782 Train-Err:0.330 Train-Acc:0.886
+I:140 Test-Err:0.406 Test-Acc:0.8009 Train-Err:0.342 Train-Acc:0.889
+I:150 Test-Err:0.423 Test-Acc:0.7859 Train-Err:0.322 Train-Acc:0.89
+I:160 Test-Err:0.411 Test-Acc:0.7906 Train-Err:0.333 Train-Acc:0.884
+I:170 Test-Err:0.414 Test-Acc:0.7867 Train-Err:0.324 Train-Acc:0.897
+I:180 Test-Err:0.412 Test-Acc:0.7893 Train-Err:0.317 Train-Acc:0.902
+I:190 Test-Err:0.411 Test-Acc:0.7966 Train-Err:0.316 Train-Acc:0.906
+I:200 Test-Err:0.418 Test-Acc:0.7939 Train-Err:0.334 Train-Acc:0.898
+I:210 Test-Err:0.431 Test-Acc:0.7795 Train-Err:0.313 Train-Acc:0.899
+I:220 Test-Err:0.432 Test-Acc:0.7877 Train-Err:0.311 Train-Acc:0.913
+I:230 Test-Err:0.431 Test-Acc:0.7915 Train-Err:0.305 Train-Acc:0.914
+I:240 Test-Err:0.434 Test-Acc:0.7924 Train-Err:0.298 Train-Acc:0.908
+I:250 Test-Err:0.421 Test-Acc:0.793 Train-Err:0.298 Train-Acc:0.915
+I:260 Test-Err:0.422 Test-Acc:0.793 Train-Err:0.298 Train-Acc:0.919
+I:270 Test-Err:0.412 Test-Acc:0.7936 Train-Err:0.300 Train-Acc:0.907
+I:280 Test-Err:0.415 Test-Acc:0.7864 Train-Err:0.307 Train-Acc:0.903
+I:290 Test-Err:0.426 Test-Acc:0.7859 Train-Err:0.290 Train-Acc:0.917
 """

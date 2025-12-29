@@ -20,6 +20,18 @@ def _np_expand(data, dim, copies):
     return np.repeat(np.expand_dims(data, axis=dim), copies, axis=dim)
 
 
+
+def ensure_tensor(x):
+    if isinstance(x, Tensor):
+        return x
+    
+    ## todo - add (auto-)conversion from
+    #           torch.tensor too; use  .numpy() or such - why? why not? 
+    
+    return Tensor( x )
+
+
+
 class Tensor():   
     def __init__(self, data, requires_grad=False, _creators=(), _op=None):
         self.data = np.array(data, dtype=np.float32)   ### always - autoconvert to dtype float32!!!
@@ -137,11 +149,29 @@ class Tensor():
 
 
     def __add__(self, other):
+        ## fixes
+        ##  AttributeError: 'int' object has no attribute 'requires_grad'
+        other = ensure_tensor(other)
         if(self.requires_grad or other.requires_grad):
            return Tensor(self.data + other.data,
                        requires_grad=True,   
                       _creators=[self,other], _op="add")
         return Tensor(self.data + other.data)
+    def __radd__(self, other):
+        ##  fixes
+        ## unsupported operand type(s) for +: 'int' and 'Tensor'
+        ##  note - radd is called with self being the right-hand operand
+        return ensure_tensor(other).__add__(self)
+
+    def __sub__(self, other):
+        other = ensure_tensor(other)
+        if(self.requires_grad or other.requires_grad):
+            return Tensor(self.data - other.data,
+                          requires_grad=True,
+                          _creators=[self,other], _op="sub")
+        return Tensor(self.data - other.data)
+    def __rsub__(self, other):
+        return ensure_tensor(other).__sub__(self)
 
     def __neg__(self):
         if(self.requires_grad):
@@ -150,13 +180,9 @@ class Tensor():
                           _creators=[self], _op="neg")
         return Tensor(-self.data)
 
-    def __sub__(self, other):
-        if(self.requires_grad or other.requires_grad):
-            return Tensor(self.data - other.data,
-                          requires_grad=True,
-                          _creators=[self,other], _op="sub")
-        return Tensor(self.data - other.data)
-    
+    ###
+    #  todo - add ensure_tensor check to ops
+    #          and add reverse operator too!!! 
     def __mul__(self, other):
         if(self.requires_grad or other.requires_grad):
             return Tensor(self.data * other.data,
@@ -199,6 +225,8 @@ class Tensor():
                           _creators=[self,x], _op="mm")
         return Tensor(np.matmul(self.data, x.data))
 
+    ## todo - check mm vs matmul in pytorch
+    ##      one works with broadcast? 
     def mm(self, x):
         return self.__matmul__(x)
 

@@ -36,10 +36,10 @@ for iteration in range(60):
    layer_2_error = 0
    for i in range(len(streetlights)): 
       ## predict
-      x = Tensor(streetlights[i:i+1])
+      x =  Tensor(streetlights[i:i+1])
       y_hat = model( x ) 
       # Compare
-      y = Tensor(walk_vs_stop[i:i+1])
+      y =  Tensor(walk_vs_stop[i:i+1])
       loss = criterion(y_hat, y)
       layer_2_error += loss.data.sum()    ## use loss.item() ???
       # Learn
