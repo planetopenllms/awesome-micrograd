@@ -85,8 +85,8 @@ class Sequential(Module):
     def __init__(self, *layers):
         super().__init__()
         # convenience & backward compat - accept either multiple args or a single iterable
-        if len(layers) == 1 and isinstance(layers[0], (list, tuple)):
-            layers = layers[0]
+        # if len(layers) == 1 and isinstance(layers[0], (list, tuple)):
+        #    layers = layers[0]
         for i, layer in enumerate(layers):
             self.add_module(str(i), layer)
 

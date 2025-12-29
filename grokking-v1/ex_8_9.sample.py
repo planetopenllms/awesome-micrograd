@@ -68,7 +68,7 @@ for j in range(iterations):
                          " Train-Acc:" + str(correct_cnt/ float(len(images))))
         
 
-print("\bye")
+print("\nbye")
 
 
 """
