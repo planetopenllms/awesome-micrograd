@@ -1,4 +1,8 @@
 """
+
+generated via chatgpt prompt on pytorch-like module mechanics.
+
+
 Tiny toy of PyTorch-like Module mechanics, extended with:
 - Sequence: a Sequential-like container that registers its children
 - Dropout: NumPy-based inverted dropout module (uses self.training)
