@@ -135,8 +135,18 @@ class MSELoss(Module):
         super().__init__()
     
     def forward(self, pred, target):
+        ## todo - add mean() to sum-up and divide by batch dim - why? why not?
         return ((pred - target)*(pred - target)).sum(dim=0)
+
+class CrossEntropyLoss(Module):
+    def __init__(self):
+        super().__init__()
     
+    def forward(self, pred, target):
+        return pred.cross_entropy(target)
+
+
+
     
 ###
 # -- activation function layers

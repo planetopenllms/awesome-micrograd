@@ -24,3 +24,16 @@ def load_data():
 
   return (images, labels),(test_images,test_labels)
 
+
+### todo/fix -  use one_hot or one_hot_encoded flag or such - why? why not?
+##                  instead of _v2
+def load_data_v2():
+  (x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+  images, labels = (x_train[0:1000].reshape(1000,28*28) / 255, 
+                    y_train[0:1000])
+
+
+  test_images = x_test.reshape(len(x_test),28*28) / 255
+
+  return (images, labels),(test_images,y_test)

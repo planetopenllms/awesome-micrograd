@@ -146,6 +146,11 @@ class Tensor():
             self._creators[0]._input_grad(output_grad * (self.data > 0))
         if(self._op == "dropout"):
             self._creators[0]._input_grad(output_grad * self.mask)
+        if(self._op == "cross_entropy"):
+            ## todo/check - why no output_grad in formula?
+            ##      assume always loss? that is, start of backward calc?
+            dx = self.softmax_output - self.target_dist
+            self._creators[0]._input_grad( dx )
 
 
     def __add__(self, other):
@@ -271,6 +276,37 @@ class Tensor():
            out.mask = mask
            return out
         return Tensor(new_data)
+
+
+    def cross_entropy(self, target_indices):
+        temp = np.exp(self.data)  # elementwise
+        softmax_output = temp / np.sum(temp,
+                                       axis=-1,
+                                       keepdims=True)
+        ## print("softmax_output:", softmax_output.shape, softmax_output )
+        ## note: indices must be integer!!!!
+        t = target_indices.data.astype(int) 
+        ## print( "t:", t.shape, t )
+        ## make one-hot encoded targets
+        ## print( "np.eye():", np.eye(self.data.shape[-1]) )
+        # target_dist = np.eye(p.shape[1])[t]
+        target_dist = np.eye(self.data.shape[-1])[t]
+        ## print( "target_dist:", target_dist.shape, target_dist )
+        ##  note - uses mean() thus reduces dimension!!
+        ##                     check dim of returned loss!!
+        ##     check/todo -  also add mean() to  MSELoss (why? why not?)
+        ## loss = -(np.log(p) * (target_dist)).sum(axis=1).mean()
+        loss = -(np.log(softmax_output) * (target_dist)).sum(axis=-1).mean()
+    
+        if(self.requires_grad):
+            out = Tensor(loss,
+                         requires_grad=True,
+                         _creators=[self],
+                         _op="cross_entropy")
+            out.softmax_output = softmax_output
+            out.target_dist    = target_dist  # one-hot encoded (from int classes)
+            return out
+        return Tensor(loss)
 
 
     def __repr__(self):
