@@ -57,32 +57,20 @@ def _np_onehot(indices, classes):
 def _np_softmax_cross_entropy(Z, indices):
     """
     Z: (batch x classes) logits
-    Y: indices
-    returns: scalar loss, softmax probabilities, one-hot encoded targets
+    Y: indices 
+    returns: scalar loss, softmax probabilities
     """
     S = _np_softmax( Z )
-
-    # cross-entropy loss
-    eps = 1e-15    # small epsilon for safety
-    log_S = np.log(S + eps)
-    #  note -  sum() / Z.shape[0]  => .mean(), that is, sum()*1/batch_size
-    ##     Z.shape[0] => batch_size
  
     batch_size   = Z.shape[0]
-    classes_size = Z.shape[1] 
-    ## make one-hot encoded targets
-    Y = _np_onehot( indices, classes=classes_size )
-
-    loss = -np.sum(Y * log_S) / batch_size 
  
-    ## print( "target_dist:", target_dist.shape, target_dist )
-    ##  note - uses mean() thus reduces dimension!!
-    ##                     check dim of returned loss!!
-    ##     check/todo -  also add mean() to  MSELoss (why? why not?)
-    ## loss = -(np.log(p) * (target_dist)).sum(axis=1).mean()
-    ## loss = -(np.log(softmax_output) * (target_dist)).sum(axis=-1).mean()
-    return loss, S, Y
+    # note: add small epsilon (1e-15) for safety
+    logprobs = -np.log(S[np.arange(batch_size), indices] + 1e-15)
 
+    ## same as np.mean(logprobs)
+    loss = np.sum(logprobs) / batch_size
+
+    return loss, S
 
 
 
@@ -213,13 +201,18 @@ class Tensor():
         if(self._op == "dropout"):
             self._creators[0]._input_grad(output_grad * self.mask)
         if(self._op == "mse"):   # mean squared error (mse)
+            ## todo/check - why no output_grad in formula?
+            ##      assume always loss? that is, start of backward calc?
             dx = 2*(self._creators[0].data-self._creators[1].data)   ## 2*(y_hat-y)
             self._creators[0]._input_grad( dx ) ## dl/dy_hat
         if(self._op == "cross_entropy"):
             ## todo/check - why no output_grad in formula?
             ##      assume always loss? that is, start of backward calc?
-            dx = self.softmax_output - self.target_dist
-            self._creators[0]._input_grad( dx )   # dL/dy_hat
+            S = self.softmax_output.copy()   ## note: will change softmax_output inplace later; make copy
+            batch_size = S.shape[0]
+            target_indices  = self._creators[1].data.astype(int)
+            S[np.arange(batch_size), target_indices] -= 1
+            self._creators[0]._input_grad( S )   # dL/dy_hat
 
 
     def __add__(self, other):
@@ -359,48 +352,16 @@ class Tensor():
         return Tensor(loss)
     
     def cross_entropy(self, target_indices):
-        ## note: indices must be integer!!!!
-        t = target_indices.data.astype(int) 
-        loss, softmax_output, target_dist = _np_softmax_cross_entropy( self.data, t )
-        
+        ## note: target_indices must be integer!!!!
+        loss, softmax_output = _np_softmax_cross_entropy( self.data, 
+                                                          target_indices.data.astype(int)
+                                                        )      
         if(self.requires_grad):
             out = Tensor(loss,
                          requires_grad=True,
-                         _creators=[self],
+                         _creators=[self, target_indices],
                          _op="cross_entropy")
             out.softmax_output = softmax_output
-            out.target_dist    = target_dist  # one-hot encoded (from int classes)
-            return out
-        return Tensor(loss)
-
-
-    def cross_entropy_xxx_old(self, target_indices):
-        temp = np.exp(self.data)  # elementwise
-        softmax_output = temp / np.sum(temp,
-                                       axis=-1,
-                                       keepdims=True)
-        ## print("softmax_output:", softmax_output.shape, softmax_output )
-        ## note: indices must be integer!!!!
-        t = target_indices.data.astype(int) 
-        ## print( "t:", t.shape, t )
-        ## make one-hot encoded targets
-        ## print( "np.eye():", np.eye(self.data.shape[-1]) )
-        # target_dist = np.eye(p.shape[1])[t]
-        target_dist = np.eye(self.data.shape[-1])[t]
-        ## print( "target_dist:", target_dist.shape, target_dist )
-        ##  note - uses mean() thus reduces dimension!!
-        ##                     check dim of returned loss!!
-        ##     check/todo -  also add mean() to  MSELoss (why? why not?)
-        ## loss = -(np.log(p) * (target_dist)).sum(axis=1).mean()
-        loss = -(np.log(softmax_output) * (target_dist)).sum(axis=-1).mean()
-    
-        if(self.requires_grad):
-            out = Tensor(loss,
-                         requires_grad=True,
-                         _creators=[self],
-                         _op="cross_entropy")
-            out.softmax_output = softmax_output
-            out.target_dist    = target_dist  # one-hot encoded (from int classes)
             return out
         return Tensor(loss)
 
