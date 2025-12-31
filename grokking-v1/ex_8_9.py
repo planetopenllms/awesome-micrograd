@@ -47,7 +47,7 @@ for j in range(iterations):
         y = Tensor(labels[i:i+1])
         loss   = criterion(y_hat, y)
         ##   note - add sum() here to add-up/sum the multi-category loss
-        error += loss.data.sum()    ## use loss.item() ???
+        error += loss.data    ## use loss.item() ???
         correct_cnt += int(np.argmax(y_hat.data) == 
                                np.argmax(labels[i:i+1])) 
         ## Learn
@@ -66,7 +66,7 @@ for j in range(iterations):
     
             y_test = Tensor(test_labels[i:i+1]) 
             loss = criterion(y_hat, y_test)
-            test_error += loss.data.sum()
+            test_error += loss.data
             test_correct_cnt += int(np.argmax(y_hat.data) == 
                                 np.argmax(test_labels[i:i+1]))
   

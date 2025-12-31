@@ -12,6 +12,7 @@ for the original code and write-up.
 
 ## open questions / todos - discuss
 
+- [ ]  add pytorch-like check for backward() - only allow auto-generate grad if dim is scalar (1,) otherwise warn/raise except!!!
 - [ ]  use generator with yield for parameters
 - [ ]  use _parameters dict in Module base and register_parameter() in nn.Linear and others
 - [x]  use raw gradient (NOT wrapped in own Tensor) - why? why not?

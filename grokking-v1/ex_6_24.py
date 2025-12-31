@@ -9,7 +9,7 @@ streetlights = np.array( [[ 1, 0, 1 ],
                           [ 0, 1, 1 ],
                           [ 0, 0, 1 ],
                           [ 1, 1, 1 ] ] )
-## targets (batch x target)
+## targets (batch x target) 
 walk_vs_stop = np.array([[1], [1], [0], [0]])
 
 
@@ -33,7 +33,7 @@ optimizer = optim.SGD(parameters=model.parameters(), lr=lr)
 
 
 for iteration in range(60):
-   layer_2_error = 0
+   error = 0
    for i in range(len(streetlights)): 
       ## predict
       x =  Tensor(streetlights[i:i+1])
@@ -41,19 +41,28 @@ for iteration in range(60):
       # Compare
       y =  Tensor(walk_vs_stop[i:i+1])
       loss = criterion(y_hat, y)
-      layer_2_error += loss.data.sum()    ## use loss.item() ???
+      error += loss.data
       # Learn
       optimizer.zero_grad()
       loss.backward()
       optimizer.step()
     
    if(iteration % 10 == 9):
-      print( f"Error: {layer_2_error}")
+      print( f"Error: {error}")
 
 
 print( "bye" )
 
 """
+Error: 0.49747171998023987
+Error: 0.002649485832080245
+Error: 1.4110898973740404e-06
+Error: 6.523112605627546e-10
+Error: 3.00026957488278e-13
+Error: 1.5355111523647838e-14
+
+--or--
+
 Error: 1.3428703546524048
 Error: 1.1580779552459717
 Error: 0.9731759428977966

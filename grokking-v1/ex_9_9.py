@@ -2,7 +2,7 @@
 #  mintorch version of ex_9_9.py
 #     adds cross_entropy with integer labels (NOT one-hot encoded)
 
-from mintorch import Tensor, nn, optim, _np_onehot
+from mintorch import Tensor, nn, optim
 
 import sys, numpy as np
 import mnist

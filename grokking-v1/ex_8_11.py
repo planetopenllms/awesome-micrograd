@@ -29,7 +29,6 @@ model[0].weight.data = 0.2*np.random.random((pixels_per_image,hidden_size)) - 0.
 model[3].weight.data = 0.2*np.random.random((hidden_size,num_labels)) - 0.1
 
 
-## todo/check - MSELoss - add divide by batch_size (inside) - why? why not?
 criterion = nn.MSELoss()
 optimizer = optim.SGD(parameters=model.parameters(), lr=lr)
 
@@ -47,8 +46,7 @@ for j in range(iterations):
         # compare
         y = Tensor(labels[batch_start:batch_end])
         loss   = criterion(y_hat, y)
-        ##   note - add sum() here to add-up/sum the multi-category loss
-        error += loss.data.sum()    ## use loss.item() ???
+        error += loss.data  
         for k in range(batch_size):
             correct_cnt += int(np.argmax(y_hat.data[k:k+1]) == 
                                  np.argmax(labels[batch_start+k:batch_start+k+1])) 
@@ -68,7 +66,7 @@ for j in range(iterations):
     
             y_test = Tensor(test_labels[i:i+1]) 
             loss = criterion(y_hat, y_test)
-            test_error += loss.data.sum()
+            test_error += loss.data 
             test_correct_cnt += int(np.argmax(y_hat.data) == 
                                 np.argmax(test_labels[i:i+1]))
 

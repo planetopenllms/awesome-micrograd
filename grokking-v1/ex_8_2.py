@@ -41,12 +41,8 @@ for j in range(iterations):
         y_hat =  model( x )
         ## compare
         y      = Tensor(labels[i:i+1])   
-        ## --  error += np.sum((labels[i:i+1] - layer_2) ** 2)
-        ##   note - MSELoss only sums up batch dimension (dim=0)
-        ##              NOT the multi-category loss if present
         loss   = criterion(y_hat, y)
-        ##   note - add sum() here to add-up/sum the multi-category loss
-        error += loss.data.sum()    ## use loss.item() ???
+        error += loss.data
         correct_cnt += int(np.argmax(y_hat.data) == 
                                np.argmax(labels[i:i+1])) 
         ## Learn
@@ -70,7 +66,7 @@ for j in range(iterations):
             
             y_test = Tensor(test_labels[i:i+1]) 
             loss = criterion(y_hat, y_test)
-            error += loss.data.sum()
+            error += loss.data
             correct_cnt += int(np.argmax(y_hat.data) == 
                                 np.argmax(test_labels[i:i+1]))
         sys.stdout.write(f" Test-Err:{error/len(test_images)}"  

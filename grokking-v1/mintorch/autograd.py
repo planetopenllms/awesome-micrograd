@@ -212,6 +212,9 @@ class Tensor():
             self._creators[0]._input_grad(output_grad * (self.data > 0))
         if(self._op == "dropout"):
             self._creators[0]._input_grad(output_grad * self.mask)
+        if(self._op == "mse"):   # mean squared error (mse)
+            dx = 2*(self._creators[0].data-self._creators[1].data)   ## 2*(y_hat-y)
+            self._creators[0]._input_grad( dx ) ## dl/dy_hat
         if(self._op == "cross_entropy"):
             ## todo/check - why no output_grad in formula?
             ##      assume always loss? that is, start of backward calc?
@@ -343,6 +346,18 @@ class Tensor():
            return out
         return Tensor(new_data)
 
+    def mse(self, target):
+        ## mean squared error (higher-level function)
+        ##    for batches
+        batch_size   = self.data.shape[0] 
+        loss = np.sum(np.power(self.data-target.data, 2)) / batch_size
+        if(self.requires_grad):
+           return Tensor(loss,
+                         requires_grad=True,
+                         _creators=[self,target],
+                         _op="mse")
+        return Tensor(loss)
+    
     def cross_entropy(self, target_indices):
         ## note: indices must be integer!!!!
         t = target_indices.data.astype(int) 
