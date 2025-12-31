@@ -20,6 +20,72 @@ def _np_expand(data, dim, copies):
     return np.repeat(np.expand_dims(data, axis=dim), copies, axis=dim)
 
 
+#########
+###  batch version for softmax  
+###     (batch x classes)  or
+###   xxx  (batch x n_tokens x classes)  -- keep this too? why? why not?
+##    xxx        was axis=1 (now uses axis=last, that is axis=-1)                          
+def _np_softmax(Z):
+    """
+    Z: (batch x classes) logits
+    returns: softmax probabilities
+    """
+    # shift for numerical stability  (max value is zero, all others shifted to negative!)
+    Z_shifted = Z - np.max(Z, axis=1, keepdims=True)
+    ## print( "Z_shifted:", Z_shifted )
+
+    exp_Z = np.exp(Z_shifted)
+    S = exp_Z / np.sum(exp_Z, axis=1, keepdims=True)
+    return S
+
+def _np_onehot(indices, classes):
+    """
+    encode labels (indices) e.g. [0,3,1] to one-hot encoded vectors
+    note - adds a dimension e.g.
+    (batch) => (batch x classes)
+    """
+    ## note: indices must be integer!!!!
+    indices = indices.astype(int) 
+    ## make one-hot encoded targets
+    ## print( "np.eye():", np.eye(self.data.shape[-1]) )
+    # target_dist = np.eye(p.shape[1])[t]
+    target = np.eye( classes )[ indices ]
+    return target
+
+###
+###  batch version for combinded softmax and cross_entroy
+def _np_softmax_cross_entropy(Z, indices):
+    """
+    Z: (batch x classes) logits
+    Y: indices
+    returns: scalar loss, softmax probabilities, one-hot encoded targets
+    """
+    S = _np_softmax( Z )
+
+    # cross-entropy loss
+    eps = 1e-15    # small epsilon for safety
+    log_S = np.log(S + eps)
+    #  note -  sum() / Z.shape[0]  => .mean(), that is, sum()*1/batch_size
+    ##     Z.shape[0] => batch_size
+ 
+    batch_size   = Z.shape[0]
+    classes_size = Z.shape[1] 
+    ## make one-hot encoded targets
+    Y = _np_onehot( indices, classes=classes_size )
+
+    loss = -np.sum(Y * log_S) / batch_size 
+ 
+    ## print( "target_dist:", target_dist.shape, target_dist )
+    ##  note - uses mean() thus reduces dimension!!
+    ##                     check dim of returned loss!!
+    ##     check/todo -  also add mean() to  MSELoss (why? why not?)
+    ## loss = -(np.log(p) * (target_dist)).sum(axis=1).mean()
+    ## loss = -(np.log(softmax_output) * (target_dist)).sum(axis=-1).mean()
+    return loss, S, Y
+
+
+
+
 
 def ensure_tensor(x):
     if isinstance(x, Tensor):
@@ -150,7 +216,7 @@ class Tensor():
             ## todo/check - why no output_grad in formula?
             ##      assume always loss? that is, start of backward calc?
             dx = self.softmax_output - self.target_dist
-            self._creators[0]._input_grad( dx )
+            self._creators[0]._input_grad( dx )   # dL/dy_hat
 
 
     def __add__(self, other):
@@ -277,8 +343,23 @@ class Tensor():
            return out
         return Tensor(new_data)
 
-
     def cross_entropy(self, target_indices):
+        ## note: indices must be integer!!!!
+        t = target_indices.data.astype(int) 
+        loss, softmax_output, target_dist = _np_softmax_cross_entropy( self.data, t )
+        
+        if(self.requires_grad):
+            out = Tensor(loss,
+                         requires_grad=True,
+                         _creators=[self],
+                         _op="cross_entropy")
+            out.softmax_output = softmax_output
+            out.target_dist    = target_dist  # one-hot encoded (from int classes)
+            return out
+        return Tensor(loss)
+
+
+    def cross_entropy_xxx_old(self, target_indices):
         temp = np.exp(self.data)  # elementwise
         softmax_output = temp / np.sum(temp,
                                        axis=-1,

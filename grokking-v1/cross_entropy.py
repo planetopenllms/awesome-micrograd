@@ -1,76 +1,60 @@
-from mintorch import Tensor, nn  
+from mintorch import Tensor, nn, _np_softmax, _np_onehot, _np_softmax_cross_entropy
 
-##
-#   (batch x classes)
-#   --
-#   (target_indices) - same as (batch x classes)
+import numpy as np
 
-# data indices
-#  (xclasses)
-y_hat = Tensor( [[4,3,2,1],
-                  [-1,2,5,1],
-                  [0,1,2,3]
-                  ], requires_grad=True)
+
+#####
+## use low-level methods
+
+#  (batch x classes)  logits
+y_hat = np.array( [[4,3,2,1],
+                   [-1,2,5,1],
+                   [0,1,2,3]]
+                  )
+
+print( "y_hat:", y_hat )
+print( "softmax:", _np_softmax( y_hat ))
+
 
 # target class indices (no need to hot-encode)
-y = Tensor([0,1,3])
+#   (classes)  indices
+y = np.array([0,1,3])
+print( "y:", y )
 
-print( y_hat )
-print( y )
+classes_size = y_hat.shape[1]
+print( "onehot:", _np_onehot( y, classes=classes_size))
 
+print( "softmax_cross_entropy:", _np_softmax_cross_entropy( y_hat, y ))
+
+print( "---")
+###
+##   numerical stability  (e.g. try e**x with x=1000)
+y_hat = np.array( [[400,300,200,100],
+                   [-1000,2000,5000,1000],
+                   [0,100,200,3]]
+                  )
+
+print( "y_hat:", y_hat )
+print( "softmax:", _np_softmax( y_hat ))
+print( "softmax_cross_entropy:", _np_softmax_cross_entropy( y_hat, y ))
+
+
+
+#####
+## use high-level methods
+print( "--- high-level:" )
 
 criterion = nn.CrossEntropyLoss()
 
+y_hat = Tensor(y_hat, requires_grad=True)
+y     = Tensor(y)
 loss = criterion( y_hat, y )
-
-# loss = y_hat.cross_entropy( y ) 
-print( loss )
+print( "loss:", loss )
 
 loss.backward()
-print( "y_hat.grad", y_hat.grad )
-
-
-#############
-## check with batch dim
-print( "\n=== with batch dim" )
-
-##
-#   (batch x n_tokens x classes)
-#   --
-#   (n_tokens x target_indices) - same as (batch x n_tokens x classes)
-
-y_hat = Tensor( [[[4,3,2,1],
-                  [-1,2,5,1],
-                  [0,1,2,3]],
-                  [[1,2,3,4],
-                   [-1,2,8,2],
-                   [3,2,1,0]]
-                  ], requires_grad=True)
-
-# target indices
-y = Tensor([[0,1,3],
-            [3,1,0]])
-
-print( y_hat )
-print( y )
-
-loss = criterion( y_hat, y )
-
-# loss = y_hat.cross_entropy( y ) 
-print( loss )
-
-loss.backward()
+print( "y_hat", y_hat )
 print( "y_hat.grad", y_hat.grad )
 
 
 
-print("bye")
-
-
-"""
-y_hat = Tensor( [[0.3,0.7],
-                 [0.1,0.9]
-                 ], requires_grad=True)
-y = Tensor([[0,1],
-            [1,0]])
-"""
+print( "bye" )

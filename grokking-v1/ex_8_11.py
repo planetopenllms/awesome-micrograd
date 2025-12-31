@@ -39,7 +39,7 @@ for j in range(iterations):
 
     model.train()
     for i in range(int(len(images) / batch_size)):
-        batch_start, batch_end = ((i * batch_size),((i+1)*batch_size))
+        batch_start, batch_end = ((i*batch_size),((i+1)*batch_size))
 
         # predict
         x = Tensor(images[batch_start:batch_end])
