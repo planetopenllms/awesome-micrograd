@@ -194,4 +194,38 @@ class Embedding(Module):
         return self.weight.index_select(input)
     
 
+
+class RNNCell(Module):    
+    def __init__(self, n_inputs, n_hidden, n_output, activation='sigmoid'):
+        super().__init__()
+
+        self.n_inputs = n_inputs
+        self.n_hidden = n_hidden
+        self.n_output = n_output
+        
+        if(activation == 'sigmoid'):
+            self.activation = Sigmoid()
+        elif(activation == 'tanh'):
+            self.activation = Tanh()
+        else:
+            raise Exception("Non-linearity not found")
+
+        self.w_ih = Linear(n_inputs, n_hidden)
+        self.w_hh = Linear(n_hidden, n_hidden)
+        self.w_ho = Linear(n_hidden, n_output)
+
+        ## use register_module - why? why not?  
+        self.params += self.w_ih.parameters() 
+        self.params += self.w_hh.parameters() 
+        self.params += self.w_ho.parameters()        
     
+
+    def forward(self, input, hidden):
+        from_prev_hidden = self.w_hh(hidden)
+        combined = self.w_ih(input) + from_prev_hidden
+        new_hidden = self.activation(combined)
+        output = self.w_ho(new_hidden)
+        return output, new_hidden
+    
+    def init_hidden(self, batch_size=1):
+        return Tensor(np.zeros((batch_size,self.n_hidden)), requires_grad=True)
