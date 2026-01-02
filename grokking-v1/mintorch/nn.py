@@ -172,3 +172,26 @@ class ReLU(Module):
     def forward(self, input):
         return input.relu()    
     
+####
+# more layers
+
+
+class Embedding(Module):    
+    # todo - change params to mirror pytorch?  num_embeddings, embedding_dim
+    def __init__(self, vocab_size, dim):
+        super().__init__()
+        
+        self.vocab_size = vocab_size
+        self.dim = dim
+        
+        # this random initialiation style is just a convention from word2vec
+        W = (np.random.rand(vocab_size, dim) - 0.5) / dim
+        self.weight = Tensor(W, requires_grad=True)
+        ## todo - change to self.register_parameter !!!
+        self.params.append(self.weight)
+ 
+    def forward(self, input):
+        return self.weight.index_select(input)
+    
+
+    

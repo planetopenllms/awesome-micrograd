@@ -213,6 +213,14 @@ class Tensor():
             target_indices  = self._creators[1].data.astype(int)
             S[np.arange(batch_size), target_indices] -= 1
             self._creators[0]._input_grad( S )   # dL/dy_hat
+        if(self._op == "index_select"):
+            new_grad = np.zeros_like(self._creators[0].data)
+            ## note: indices must be integer!!!!
+            indices_ = self._creators[1].data.flatten().astype(int)
+            grad_ = output_grad.reshape(len(indices_), -1)
+            for i in range(len(indices_)):
+                new_grad[indices_[i]] += grad_[i]
+            self._creators[0]._input_grad( new_grad )
 
 
     def __add__(self, other):
@@ -364,6 +372,16 @@ class Tensor():
             out.softmax_output = softmax_output
             return out
         return Tensor(loss)
+
+    def index_select(self, indices):
+        ## note: indices must be integer!!!!
+        new_data = self.data[indices.data.astype(int)]
+        if(self.requires_grad):
+            return Tensor(new_data,
+                           requires_grad=True,
+                           _creators=[self, indices],
+                           _op="index_select")
+        return Tensor(new_data)
 
 
     def __repr__(self):
