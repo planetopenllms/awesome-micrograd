@@ -8,7 +8,13 @@
 #       dropout_mask = dropout_mask*2
 #    and than in backward
 #       dropout_mask "automagically" includes scaling factor (1/1-p)
-
+#
+#   yes, subtle changes needed for accurate calculation
+#       layer_1_pre = np.dot(layer_0, weights_0_1)
+#       layer_1 = relu(layer_1_pre)
+#     backward:  
+#       relu2deriv(layer_1_pre)
+#       and dropout_mask *= 2  both forward/backward !!
 
 import sys, numpy as np
 import mnist
