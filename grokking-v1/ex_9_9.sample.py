@@ -36,8 +36,15 @@ for j in range(iterations):
         for k in range(batch_size):
             correct_cnt += int(np.argmax(layer_2[k:k+1]) == np.argmax(labels[batch_start+k:batch_start+k+1]))
 
+        ## note - standard pratice is to divide layer_2_delta 
+        ##         to get you element-wise mean  (used by pytorch)
+        ##            by B * C, that is , batch * (output) classes e.g. 100*10
+        ##         if you divide only by batch than you get batch mean!
         layer_2_delta = (labels[batch_start:batch_end]-layer_2) / batch_size
+        ##
+        ##  note - tanh2deriv(layer_1_pre) is more correct!
         layer_1_delta = layer_2_delta.dot(weights_1_2.T) * tanh2deriv(layer_1)
+        ##  note - dropout_mask * 2 is more correct!
         layer_1_delta *= dropout_mask
 
         weights_1_2 += alpha * layer_1.T.dot(layer_2_delta)

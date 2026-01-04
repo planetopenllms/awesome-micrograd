@@ -140,6 +140,28 @@ class MSELoss(Module):
         return pred.mse(target)
 
 class CrossEntropyLoss(Module):
+    ## pytorch Key facts:
+    ##  Input: logits (no softmax!)
+    ##  Targets: class indices, not one-hot
+    ##  Internally combines:
+    ##     - LogSoftmax
+    ##     - NLLLoss (negative log likelihood)
+    ## 
+    ## Formally: CrossEntropyLoss(z,y)=NLLLoss(logSoftmax(z),y)
+
+    ##  Step 2 — NLLLoss (per sample)
+    ##   loss_i = -log_probs[i, targets[i]]
+    ##  Step 3 — Reduction="mean"
+    ##   loss = sum(loss_i) / B 
+
+    ## def cross_entropy_backward(logits, targets):
+    ##   B, C = logits.shape
+    ##   probs = softmax(logits)      # computed implicitly
+    ##   grad = probs.copy()
+    ##   grad[np.arange(B), targets] -= 1
+    ##   grad /= B        
+    ##   return grad
+
     def __init__(self):
         super().__init__()
     

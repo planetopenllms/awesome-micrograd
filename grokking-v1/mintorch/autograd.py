@@ -203,11 +203,27 @@ class Tensor():
         if(self._op == "mse"):   # mean squared error (mse)
             ## todo/check - why no output_grad in formula?
             ##      assume always loss? that is, start of backward calc?
+            #
+            #    note: PyTorch backprop is
+            ##  layer_2_delta = 2 * (y_hat - y) / (batch_size * output_dim)
+            ##   missing division by batch size!!!  (and bonus output_dim!!!)
+            ##
             dx = 2*(self._creators[0].data-self._creators[1].data)   ## 2*(y_hat-y)
             self._creators[0]._input_grad( dx ) ## dl/dy_hat
         if(self._op == "cross_entropy"):
             ## todo/check - why no output_grad in formula?
             ##      assume always loss? that is, start of backward calc?
+            ##
+            ##  note:
+            ##  Important difference from MSE
+            ##  There is no extra division by C (output_dim).
+            ##   Cross-entropy already sums over classes inside each sample.
+            ##
+            ##  note: PyTorch backprop is
+            ##    p = softmax(logits)
+            ##    grad_logits = (p - one_hot(targets)) / B
+            ##
+            ##   missing division by B (batch) ?? why? why not?
             S = self.softmax_output.copy()   ## note: will change softmax_output inplace later; make copy
             batch_size = S.shape[0]
             target_indices  = self._creators[1].data.astype(int)

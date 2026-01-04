@@ -1,3 +1,42 @@
+####
+#  q: can you check that if it is standard practice 
+#    to divide layer_2_delta by batch_size? 
+#    why not dive by batch_size in the weight updates? 
+#
+#  a: Yes, dividing by batch_size is standard practice, 
+#    but you should do it exactly once. 
+#   Whether you divide the delta (as you did) 
+#   or divide the weight update is mathematically equivalent.
+#  Doing neither or doing both changes the effective learning rate.
+#
+#   ...
+#  layer_1.T.dot(layer_2_delta) is a sum over the batch dimension, 
+#  but since layer_2_delta was already divided by batch_size, 
+#   the result is actually:
+#
+#     1/B * ∑(h_i*delta_i)
+#
+#  So this is the mean gradient, which is correct.
+##
+## Pattern A (your approach)
+##   delta /= batch_size
+##   W += lr * X.T @ delta
+##
+## Pattern B (more common in frameworks)
+##   delta = labels - preds
+##   W += lr * (X.T @ delta) / batch_size
+##
+### Why frameworks often average the loss instead
+##   Frameworks usually define the loss as "mean" by default:
+##      loss = MSELoss(reduction="mean")
+##
+##   That means:
+##   Gradients are already normalized by batch size
+##   Learning rate becomes batch-size invariant
+##   You don’t need to retune alpha when batch size changes
+##   Your code achieves the same effect.
+##   Most deep learning libraries (PyTorch, TensorFlow) conceptually follow Pattern B,
+#     but internally it’s often fused and optimized.
 
 
 import sys, numpy as np
