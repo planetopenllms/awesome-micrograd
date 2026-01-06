@@ -1,3 +1,10 @@
+###################
+#  "classic" autograd engine version
+#      closest to the original book source
+#     splits forward and backward calculation for operations
+
+
+
 import numpy as np
 
 
@@ -165,6 +172,15 @@ class Tensor():
  
         output_grad = self.grad
         
+        if(self._op == "add"):
+            self._creators[0]._input_grad( output_grad )
+            self._creators[1]._input_grad( output_grad )
+        if(self._op == "sub"):
+            self._creators[0]._input_grad( output_grad )
+            self._creators[1]._input_grad( -output_grad )
+        if(self._op == "mul"):
+            self._creators[0]._input_grad( output_grad * self._creators[1].data ) 
+            self._creators[1]._input_grad( output_grad * self._creators[0].data )
         if(self._op == "mm"):
             c0 = self._creators[0]
             c1 = self._creators[1]
@@ -234,17 +250,11 @@ class Tensor():
         ## fixes
         ##  AttributeError: 'int' object has no attribute 'requires_grad'
         other = ensure_tensor(other)
-        if(self.requires_grad or other.requires_grad):        
-           out = Tensor(self.data + other.data,
-                        requires_grad=True,   
-                        _creators=[self,other], _op="add")
-           def _backward():
-               self._input_grad( out.grad )
-               other._input_grad( out.grad )  
-           out._backward = _backward
-           return out
+        if(self.requires_grad or other.requires_grad):
+           return Tensor(self.data + other.data,
+                       requires_grad=True,   
+                      _creators=[self,other], _op="add")
         return Tensor(self.data + other.data)
-   
     def __radd__(self, other):
         ##  fixes
         ## unsupported operand type(s) for +: 'int' and 'Tensor'
@@ -254,21 +264,15 @@ class Tensor():
     def __sub__(self, other):
         other = ensure_tensor(other)
         if(self.requires_grad or other.requires_grad):
-            out = Tensor(self.data - other.data,
+            return Tensor(self.data - other.data,
                           requires_grad=True,
                           _creators=[self,other], _op="sub")
-            def _backward():
-                self._input_grad( out.grad )
-                other._input_grad( -out.grad )
-            out._backward = _backward
-            return out
         return Tensor(self.data - other.data)
     def __rsub__(self, other):
         return ensure_tensor(other).__sub__(self)
 
     def __neg__(self):
         if(self.requires_grad):
-            ## todo/check: add _backward for __neg__ - why? why not?
             return Tensor(-self.data,   ## or use *-1
                           requires_grad=True,
                           _creators=[self], _op="neg")
@@ -279,14 +283,9 @@ class Tensor():
     #          and add reverse operator too!!! 
     def __mul__(self, other):
         if(self.requires_grad or other.requires_grad):
-            out = Tensor(self.data * other.data,
+            return Tensor(self.data * other.data,
                           requires_grad=True,
                           _creators=[self,other], _op="mul")
-            def _backward():
-                self._input_grad( out.grad * other.data ) 
-                other._input_grad( out.grad * self.data )
-            out._backward = _backward
-            return out
         return Tensor(self.data * other.data)   
 
     def sum(self, dim):
