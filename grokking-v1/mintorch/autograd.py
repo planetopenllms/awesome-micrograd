@@ -165,13 +165,6 @@ class Tensor():
  
         output_grad = self.grad
         
-        if(self._op == "tanh"):
-            ones = np.ones_like(output_grad)
-            self._creators[0]._input_grad(output_grad * (ones - (self.data * self.data)))
-        if(self._op == "relu"):
-            self._creators[0]._input_grad(output_grad * (self.data > 0))
-        if(self._op == "dropout"):
-            self._creators[0]._input_grad(output_grad * self.mask)
         if(self._op == "mse"):   # mean squared error (mse)
             ## todo/check - why no output_grad in formula?
             ##      assume always loss? that is, start of backward calc?
@@ -348,18 +341,27 @@ class Tensor():
 
     def tanh(self):
         if(self.requires_grad):
-            return Tensor(np.tanh(self.data),
+            out = Tensor(np.tanh(self.data),
                           requires_grad=True,
                           _creators=[self],
                           _op="tanh")
+            def _backward():
+                ones = np.ones_like(out.grad)
+                self._input_grad(out.grad * (ones - (self.data * self.data)))
+            out._backward = _backward
+            return out
         return Tensor(np.tanh(self.data))
 
     def relu(self):
         if(self.requires_grad):
-            return Tensor( np.maximum(0, self.data),
+            out = Tensor( np.maximum(0, self.data),
                             requires_grad=True,
                             _creators=[self],
                             _op="relu")
+            def _backward():
+                self._input_grad( out.grad * (self.data > 0) )
+            out._backward = _backward
+            return out
         return Tensor(np.maximum(0, self.data))
    
 
@@ -375,7 +377,10 @@ class Tensor():
                            requires_grad=True,
                            _creators=[self],
                            _op="dropout")
-           out.mask = mask
+           def _backward():
+               self._input_grad(out.grad * mask)
+           out._backward = _backward
+           ## out.mask = mask
            return out
         return Tensor(new_data)
 
