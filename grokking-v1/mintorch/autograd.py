@@ -165,25 +165,6 @@ class Tensor():
  
         output_grad = self.grad
         
-        if(self._op == "mm"):
-            c0 = self._creators[0]
-            c1 = self._creators[1]
-            c0._input_grad( np.matmul(output_grad, c1.data.T) )
-            c1._input_grad( np.matmul(output_grad.T, c0.data).T )
-        if(self._op == "transpose"):
-            self._creators[0]._input_grad( output_grad.T )
-        if(isinstance(self._op,str) and self._op.startswith( "sum_")):
-            dim = int(self._op.split("_")[1])
-            self._creators[0]._input_grad( 
-                    _np_expand( output_grad, dim, self._creators[0].data.shape[dim]))
-        if(isinstance(self._op, str) and self._op.startswith("expand_")):
-            dim = int(self._op.split("_")[1])
-            self._creators[0]._input_grad( output_grad.sum(axis=dim) )
-        if(self._op == "neg"):
-            self._creators[0]._input_grad( -output_grad )
-        if(self._op == "sigmoid"):
-            ones = np.ones_like(output_grad)
-            self._creators[0]._input_grad(output_grad * (self.data * (ones - self.data)))
         if(self._op == "tanh"):
             ones = np.ones_like(output_grad)
             self._creators[0]._input_grad(output_grad * (ones - (self.data * self.data)))
@@ -268,10 +249,13 @@ class Tensor():
 
     def __neg__(self):
         if(self.requires_grad):
-            ## todo/check: add _backward for __neg__ - why? why not?
-            return Tensor(-self.data,   ## or use *-1
+            out = Tensor(-self.data,   ## or use *-1 - why? why not?
                           requires_grad=True,
                           _creators=[self], _op="neg")
+            def _backward():
+                self._input_grad( -out.grad ) 
+            out._backward = _backward
+            return out
         return Tensor(-self.data)
 
     ###
@@ -292,24 +276,38 @@ class Tensor():
     def sum(self, dim):
         new_data = self.data.sum(axis=dim)
         if(self.requires_grad):
-            return Tensor(new_data,
+            out = Tensor(new_data,
                           requires_grad=True,
-                          _creators=[self], _op="sum_"+str(dim))
+                          _creators=[self], _op=f"sum_{dim}")
+            def _backward():
+                self._input_grad( 
+                    _np_expand( out.grad, dim=dim, copies=self.data.shape[dim]))
+            out._backward = _backward
+            return out
         return Tensor(new_data)
     
     def expand(self, dim, copies):
         new_data = _np_expand( self.data, dim, copies )     
         if(self.requires_grad):
-            return Tensor(new_data,
+            out = Tensor(new_data,
                           requires_grad=True,
-                          _creators=[self], _op="expand_"+str(dim))
+                          _creators=[self], _op=f"expand_{dim}")
+            def _backward():
+                self._input_grad( out.grad.sum(axis=dim) )
+            out._backward = _backward
+            return out
         return Tensor(new_data)
+
 
     def transpose(self):
         if(self.requires_grad):
-            return Tensor(self.data.T,
+            out = Tensor(self.data.T,
                           requires_grad=True,
                           _creators=[self], _op="transpose")
+            def _backward():
+               self._input_grad( out.grad.T )
+            out._backward = _backward
+            return out
         return Tensor(self.data.T)
    
     @property
@@ -319,9 +317,14 @@ class Tensor():
 
     def __matmul__(self,x):
         if(self.requires_grad or x.requires_grad):
-            return Tensor(np.matmul(self.data, x.data),    
+            out = Tensor(np.matmul(self.data, x.data),    
                           requires_grad=True,
                           _creators=[self,x], _op="mm")
+            def _backward():
+                self._input_grad( np.matmul(out.grad, x.data.T) )
+                x._input_grad( np.matmul(out.grad.T, self.data).T )
+            out._backward = _backward
+            return out
         return Tensor(np.matmul(self.data, x.data))
 
     ## todo - check mm vs matmul in pytorch
@@ -332,10 +335,15 @@ class Tensor():
 
     def sigmoid(self):
         if(self.requires_grad):
-            return Tensor(1 / (1 + np.exp(-self.data)),
+            out = Tensor(1 / (1 + np.exp(-self.data)),
                           requires_grad=True,
                           _creators=[self],
                           _op="sigmoid")
+            def _backward():
+                ones = np.ones_like(out.grad)
+                self._input_grad(out.grad * (self.data * (ones - self.data)))
+            out._backward = _backward
+            return out
         return Tensor(1 / (1 + np.exp(-self.data)))
 
     def tanh(self):
